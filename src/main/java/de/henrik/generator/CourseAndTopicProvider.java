@@ -5,15 +5,15 @@ import de.henrik.data.IntegerTupel;
 import de.henrik.data.Topic;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.TreeMap;
 
 public class CourseAndTopicProvider {
     private final long seed;
     private final IntegerTupel numberOfCourses;
     private final IntegerTupel numberOfTopicsPerCourse;
-    private final IntegerTupel slotsOfTopic;
+    private final IntegerTupel slotsOfTopic; //not used atm. we only have single slot single topics.
 
     private final IntegerTupel numberOfGroupCourses;
     private final IntegerTupel numberOfTopicsPerGroupCourse;
@@ -32,6 +32,10 @@ public class CourseAndTopicProvider {
         this.numberOfTopicsPerGroupCourse = numberOfTopicsPerGroupCourse;
         this.slotsOfGroupTopic = slotsOfGroupTopic;
         this.maxSizeOfGroupTopic = maxSizeOfGroupTopic;
+    }
+
+    public int getMaxSizeOfGroupTopic() {
+        return maxSizeOfGroupTopic;
     }
 
     public List<Course> getCourseList() {
@@ -60,7 +64,7 @@ public class CourseAndTopicProvider {
             courseList.add(course);
             int topicCount = random.nextInt(numberOfTopicsPerCourse.first(), numberOfTopicsPerCourse.second());
             for (int topicI = 0; topicI < topicCount; topicI++) {
-                Topic topic = new Topic(course.name() + " Topic " + topicI, course, new IntegerTupel(1,1), random.nextInt(slotsOfTopic.first(), slotsOfTopic.second()));
+                Topic topic = new Topic(course.name() + " Topic " + topicI, course, new IntegerTupel(1, 1), 1);
                 topicList.add(topic);
             }
         }
@@ -73,12 +77,18 @@ public class CourseAndTopicProvider {
             int groupTopicCount = random.nextInt(numberOfTopicsPerGroupCourse.first(), numberOfTopicsPerGroupCourse.second());
             for (int topicI = 0; topicI < groupTopicCount; topicI++) {
                 int minSize = random.nextInt(1, maxSizeOfGroupTopic + 1);
-                int maxSize = minSize == maxSizeOfGroupTopic ? minSize : random.nextInt(minSize, maxSizeOfGroupTopic+1);
-                Topic topic = new Topic(course.name() + " GroupTopic " + topicI, course, new IntegerTupel(minSize,maxSize), random.nextInt(slotsOfGroupTopic.first(), slotsOfGroupTopic.second()));
+                int maxSize = minSize == maxSizeOfGroupTopic ? minSize : random.nextInt(minSize, maxSizeOfGroupTopic + 1);
+                Topic topic = new Topic(course.name() + " GroupTopic " + topicI, course, new IntegerTupel(minSize, maxSize), random.nextInt(slotsOfGroupTopic.first(), slotsOfGroupTopic.second()));
                 topicList.add(topic);
             }
         }
     }
 
 
+    public TreeMap<Integer, ArrayList<Topic>> topicsByMaxSlotSize() {
+        TreeMap<Integer, ArrayList<Topic>> result = new TreeMap<>();
+        for (Topic topic : topicList)
+            result.computeIfAbsent(topic.slotSize().second(), k -> new ArrayList<>()).add(topic);
+        return result;
+    }
 }

@@ -39,7 +39,7 @@ public class StudentAndGroupProvider {
 
     public void generate() {
         studentList = new ArrayList<>();
-        groupsBySize = new HashMap<>();
+        groupsBySize = new TreeMap<>();
         Random random = new Random(seed);
         for (int i = 0; i < studentCount; i++) {
             studentList.add(new Student("Student " + i, "tu" + i + "id"));

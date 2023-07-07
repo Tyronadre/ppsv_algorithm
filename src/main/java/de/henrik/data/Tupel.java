@@ -35,9 +35,7 @@ public class Tupel<T, U> {
 
     @Override
     public String toString() {
-        return "Tupel[" +
-                "first=" + first + ", " +
-                "second=" + second + ']';
+        return "["  + first + "/" + second + ']';
     }
 
 }

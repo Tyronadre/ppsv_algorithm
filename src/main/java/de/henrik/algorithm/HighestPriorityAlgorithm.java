@@ -10,25 +10,21 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-
 /**
  * This algorithm has one cycle.
- * It iterates over all slots of all topics and takes a random application from any group that has not been assigned so far.
- * If there are no applications left for a slot it goes to the next topic.
- * For a given group slot, this algorithm will assign a random combination of applications from all possible combinations for this slot.
+ * It iterates over all topics and takes the application with the highest priority from any group that has not been assigned so far.
+ * If there are no applications left for a topic it goes to the next topic.
+ * For a given group slot, this algorithm will find the biggest combination of applications that still fits the slot with the smallest combined priority.
  * If there are no combinations of applications that fit the slot, it will go to the next slot.
  */
-public class RandomIterationAlgorithm extends Algorithm {
-
-
-    public RandomIterationAlgorithm(long seed, Provider provider, Graph graph) {
+public class HighestPriorityAlgorithm extends Algorithm {
+    public HighestPriorityAlgorithm(long seed, Provider provider, Graph graph) {
         super(seed, provider, graph);
     }
 
     @Override
     @SuppressWarnings("Duplicates")
     void startAlgorithm() {
-
         var applicationHashMap = provider.applicationsProvider.getConcurrentApplicationHashMap();
 
         List<Application> acceptedApplications = new ArrayList<>();
@@ -53,12 +49,14 @@ public class RandomIterationAlgorithm extends Algorithm {
                         edge.setAttribute("ui.style", "fill-color: rgb(200, 200, 100);");
                     }
                 }
+                //sort the applications by priority
+                possibleApplications.sort(Comparator.comparingInt(Application::priority));
                 checkPause();
 
                 // we do single topics and group topics separately cause single topics are easier, and we have way more of them
                 if (slot.spaceLeft() == 1) {
-                    //Get a random application and accept it
-                    var app = possibleApplications.get(random.nextInt(possibleApplications.size()));
+                    //Get the application with the highest prio and accept it
+                    var app = possibleApplications.get(0);
                     acceptedApplications.add(app);
                     slot.acceptApplication(app);
                     applicationHashMap.removeAllWithSameKey(app);
@@ -76,7 +74,7 @@ public class RandomIterationAlgorithm extends Algorithm {
                     possibleApplications.sort(Comparator.comparingInt(Application::size));
                     int remainingSize = slot.spaceLeft();
 
-                    //this can be optimized, and prob wont work for big stuff!!!
+                    //this can be optimized, and prob won't work for big stuff!!!
                     //get all possible combinations and remove all that are too big or too small
                     List<List<Application>> possibleCombinations = Util.generateDifferentPermutations(possibleApplications);
                     List<List<Application>> combinationsToRemove = new ArrayList<>();
@@ -92,8 +90,20 @@ public class RandomIterationAlgorithm extends Algorithm {
                         continue;
                     }
 
-                    // if we have possible combinations we take a random one
-                    var applications = possibleCombinations.get(random.nextInt(possibleCombinations.size()));
+
+                    // sort after the biggest one with the lowest combined priority
+                    possibleCombinations.sort((o1, o2) -> {
+                        int o1Size = o1.stream().mapToInt(Application::size).sum();
+                        int o2Size = o2.stream().mapToInt(Application::size).sum();
+                        if (o1Size == o2Size) {
+                            int o1Prio = o1.stream().mapToInt(Application::priority).sum();
+                            int o2Prio = o2.stream().mapToInt(Application::priority).sum();
+                            return Integer.compare(o1Prio, o2Prio);
+                        }
+                        return Integer.compare(o2Size, o1Size);
+                    });
+                    // take the first one
+                    var applications = possibleCombinations.get(0);
                     for (Application app : applications) {
                         acceptedApplications.add(app);
                         slot.acceptApplication(app);
