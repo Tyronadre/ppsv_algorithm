@@ -3,6 +3,8 @@ package de.henrik.algorithm;
 import de.henrik.data.Application;
 import de.henrik.data.Topic;
 import de.henrik.generator.Provider;
+import org.graphstream.graph.Edge;
+import org.graphstream.graph.Element;
 import org.graphstream.graph.Graph;
 
 import java.util.ArrayList;
@@ -17,6 +19,7 @@ public class Util {
     }
 
     private static <T> void backtrack(List<List<T>> result, List<T> tempList, List<T> input) {
+        System.out.println(result.size());
         if (tempList.size() > 0) {
             result.add(new ArrayList<>(tempList));
         }
@@ -29,33 +32,44 @@ public class Util {
         }
     }
 
-    public static void repaintGraph(Graph graph, Provider provider) {
-        int startGreen = 0;
-        int endGreen = 255;
-
+    public static void repaintGraph(Graph graph) {
         graph.edges().forEach(edge -> {
             Application application = edge.getAttribute("data", Application.class);
-
-            double logProportion = 1 - Math.log10(application.priority()) / Math.log10(10);
-
-            int red = 0;
-            int green = (int) Math.round(startGreen + (endGreen - startGreen) * logProportion);
-            int blue = (int) Math.round((application.collectionID() * 255) / 3.0);
-
-
-            edge.setAttribute("ui.style", "fill-color: rgb(" + red + ", " + green + ", " + blue + ");");
+            if (application.isAccepted()) {
+                edge.setAttribute("ui.class", "accepted");
+            } else {
+                edge.setAttribute("ui.class", "");
+            }
         });
         graph.nodes().forEach(node -> {
-            if (node.getAttribute("ui.class") == "topic") {
-                node.setAttribute("ui.style", "fill-color: rgb(0, 100, 255);");
+            if (node.getAttribute("ui.class", String.class).contains("topic")) {
+                node.setAttribute("ui.class", "topic");
             } else {
-                node.setAttribute("ui.style", "fill-color: rgb(0, 255, 100);");
+                node.setAttribute("ui.class", "group");
+
             }
         });
-        for (Topic topic : provider.courseAndTopicProvider.getTopicList()) {
-            for (Application acceptedApplication : topic.acceptedApplications()) {
-                graph.getEdge(acceptedApplication.toString()).setAttribute("ui.style", "fill-color: rgb(255, 0, 0);");
-            }
+    }
+
+    public static void addElementClass(Element element, String className) {
+        String currentClasses = element.getAttribute("ui.class",String.class);
+        if (currentClasses.length() == 0) {
+            element.setAttribute("ui.class", className);
+        } else if (!currentClasses.contains(className)) {
+            String newClasses = currentClasses + ", " + className;
+            element.setAttribute("ui.class", newClasses);
+        }
+    }
+
+    public static void highlightElement(Element element) {
+        addElementClass(element, "standout");
+    }
+
+    public static void unhighlightElement(Element element) {
+        String currentClasses = element.getAttribute("ui.class",String.class);
+        if (currentClasses.contains("standout")) {
+            String newClasses = currentClasses.replace("standout", "");
+            element.setAttribute("ui.class", newClasses);
         }
     }
 }

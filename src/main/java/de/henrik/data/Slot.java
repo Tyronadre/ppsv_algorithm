@@ -42,10 +42,11 @@ public final class Slot {
     }
 
     public void acceptApplication(Application application) {
-        if (application.size() > spaceLeft()) {
-            throw new IllegalArgumentException("Application is too big for this slot!");
-        }
         applications.add(application);
+    }
+
+    public void removeApplication(Application application) {
+        applications.remove(application);
     }
 
     public List<Application> acceptedApplications() {

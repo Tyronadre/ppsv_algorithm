@@ -113,4 +113,8 @@ public class Topic {
     public void clearApplications() {
         slots.forEach(Slot::clearApplications);
     }
+
+    public void removeApplication(Application currentAppOfGroup) {
+        slots.forEach(slot -> slot.removeApplication(currentAppOfGroup));
+    }
 }

@@ -37,6 +37,10 @@ public class ConcurrentApplicationHashMap {
         return byTopic.get(topic);
     }
 
+    public TreeMap<Tupel<Group, Integer>, List<Application>> getByKey() {
+        return byKey;
+    }
+
     public List<Application> getByKey(Tupel<Group, Integer> groupAndCollectionKey) {
         if (byKey.size() == 0 || !byKey.containsKey(groupAndCollectionKey)) {
             return null;
@@ -116,5 +120,9 @@ public class ConcurrentApplicationHashMap {
             result.addAll(applications);
         }
         return result;
+    }
+
+    public double getKeySize() {
+        return byKey.keySet().size();
     }
 }

@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import static de.henrik.algorithm.Util.highlightElement;
+
 
 /**
  * This algorithm has one cycle.
@@ -37,7 +39,7 @@ public class RandomIterationAlgorithm extends Algorithm {
         for (Topic topic : provider.courseAndTopicProvider.getTopicList()) {
             //go through all slots for this topic
             //paint topic we are looking at
-            graph.getNode(topic.name()).setAttribute("ui.style", "fill-color: rgb(255, 0, 0);");
+            highlightElement(graph.getNode(topic.name()));
             checkPause();
 
             if (!applicationHashMap.containsTopic(topic)) continue;
@@ -47,12 +49,7 @@ public class RandomIterationAlgorithm extends Algorithm {
                     continue;
                 }
                 var possibleApplications = applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft());
-                for (Application app : possibleApplications) {
-                    var edge = graph.getEdge(app.toString());
-                    if (!acceptedApplications.contains(edge.getAttribute("data", Application.class))) {
-                        edge.setAttribute("ui.style", "fill-color: rgb(200, 200, 100);");
-                    }
-                }
+                possibleApplications.forEach(app -> highlightElement(graph.getEdge(app.toString())));
                 checkPause();
 
                 // we do single topics and group topics separately cause single topics are easier, and we have way more of them
@@ -64,7 +61,7 @@ public class RandomIterationAlgorithm extends Algorithm {
                     applicationHashMap.removeAllWithSameKey(app);
 
                     //Repaint the edge
-                    graph.getEdge(app.toString()).setAttribute("ui.style", "fill-color: rgb(255, 0, 0);");
+                    highlightElement(graph.getEdge(app.toString()));
                     checkPause();
                 } else {
                     // if we do a group assignment we need to do it in the following way:
@@ -98,20 +95,20 @@ public class RandomIterationAlgorithm extends Algorithm {
                         acceptedApplications.add(app);
                         slot.acceptApplication(app);
                         applicationHashMap.removeAllWithSameKey(app);
-                        graph.getEdge(app.toString()).setAttribute("ui.style", "fill-color: rgb(255, 0, 0);");
+                        highlightElement(graph.getEdge(app.toString()));
                         checkPause();
                     }
                 }
-
-                synchronized (this) {
-                    try {
-                        wait(100);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+                if (slow)
+                    synchronized (this) {
+                        try {
+                            wait(100);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
-                }
             }
-            Util.repaintGraph(graph, provider);
+            Util.repaintGraph(graph);
         }
     }
 }

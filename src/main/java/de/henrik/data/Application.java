@@ -13,10 +13,22 @@ public record Application(Group group, Topic topic, int collectionID, int priori
     @Override
     public String toString() {
         return "Application{" +
-                "group=" + group +
+                "group=" + group.toString() +
                 ", topic=" + topic.name() +
                 ", collectionID=" + collectionID +
                 ", priority=" + priority +
                 '}';
+    }
+
+    public boolean isAccepted() {
+        return topic.acceptedApplications().contains(this);
+    }
+
+    public void acceptApplication() {
+        topic.acceptApplication(this);
+    }
+
+    public void removeApplication() {
+        topic.removeApplication(this);
     }
 }

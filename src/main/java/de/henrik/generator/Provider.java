@@ -11,14 +11,27 @@ import org.graphstream.graph.Node;
 import java.util.*;
 
 public class Provider {
-    long seed = new Random().nextLong();
+//    long seed = new Random().nextLong();
+    public static final int DATASET = 2;
+        long seed = 0;
     public CourseAndTopicProvider courseAndTopicProvider;
     public StudentAndGroupProvider studentAndGroupProvider;
     public ApplicationsProvider applicationsProvider;
 
     public void fillGraph(Graph graph) {
         System.out.println("\n<--- COURSE AND TOPICS --->\n");
-        courseAndTopicProvider = new CourseAndTopicProvider(seed, new IntegerTupel(10, 12), new IntegerTupel(3, 6), new IntegerTupel(4, 6), new IntegerTupel(4, 5), new IntegerTupel(3, 5), new IntegerTupel(2, 3), 5);
+        courseAndTopicProvider = switch (DATASET) {
+            case 0 ->
+                    new CourseAndTopicProvider(seed, new IntegerTupel(170, 180), new IntegerTupel(3, 6), new IntegerTupel(20, 30), new IntegerTupel(4, 5), new IntegerTupel(3, 5), new IntegerTupel(2, 3), 5);
+            case 1 ->
+                    new CourseAndTopicProvider(seed, new IntegerTupel(10, 10), new IntegerTupel(4, 4), new IntegerTupel(1, 1), new IntegerTupel(4, 4), new IntegerTupel(3, 3), new IntegerTupel(2, 2), 5);
+            case 2 ->
+                    new CourseAndTopicProvider(seed, new IntegerTupel(15, 15), new IntegerTupel(4, 4), new IntegerTupel(1, 1), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), 5);
+            case 3 -> new CustomCourseAndTopicProvider();
+            default -> throw new IllegalStateException("Unexpected value: " + DATASET);
+        };
+
+
         courseAndTopicProvider.generate();
         int i = 0;
         for (Topic topic1 : courseAndTopicProvider.getTopicList()) {
@@ -32,7 +45,13 @@ public class Provider {
         }
 
         System.out.println("\n<--- STUDENT AND GROUPS --->\n");
-        studentAndGroupProvider = new StudentAndGroupProvider(seed, 100, new TreeMap<>(Map.of(1, 50, 2, 10, 3, 5)));
+        studentAndGroupProvider = switch (DATASET) {
+            case 0 -> new StudentAndGroupProvider(seed, 1000, new TreeMap<>(Map.of(1, 900, 2, 5, 3, 5, 4, 10, 5, 20)));
+            case 1 -> new StudentAndGroupProvider(seed, 50, new TreeMap<>(Map.of(1, 30, 2, 1, 3, 1, 4, 2, 5, 3)));
+            case 2 -> new StudentAndGroupProvider(seed, 50, new TreeMap<>(Map.of(1, 50)));
+            case 3 -> new CustomStudentAndGroupProvider();
+            default -> throw new IllegalStateException("Unexpected value: " + DATASET);
+        };
         studentAndGroupProvider.generate();
         i = 0;
         for (Map.Entry<Integer, List<Group>> entry : studentAndGroupProvider.getGroupsBySize().entrySet()) {
@@ -50,13 +69,40 @@ public class Provider {
 
         System.out.println("\n<--- APPLICATIONS --->\n");
         Map<Integer, Map<Integer, Integer>> applicationDistribution = new TreeMap<>();
-        Map<Integer, Integer> collectionSize1 = new TreeMap<>(Map.of(1, 200, 2, 20, 3, 5));
-        Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 20, 2, 5));
-        Map<Integer, Integer> collectionSize3 = new TreeMap<>(Map.of(1, 5));
-        applicationDistribution.put(1, collectionSize1);
-        applicationDistribution.put(2, collectionSize2);
-        applicationDistribution.put(3, collectionSize3);
-        applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
+        int numberOfCollections;
+        switch (DATASET) {
+            case 0 -> {
+                numberOfCollections = 3;
+                Map<Integer, Integer> collectionSize1 = new TreeMap<>(Map.of(1, 4500, 2, 7, 3, 7, 4, 30, 5, 100));
+                Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 200));
+                Map<Integer, Integer> collectionSize3 = new TreeMap<>(Map.of(1, 20));
+                applicationDistribution.put(1, collectionSize1);
+                applicationDistribution.put(2, collectionSize2);
+                applicationDistribution.put(3, collectionSize3);
+                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
+            }
+            case 1 -> {
+                numberOfCollections = 2;
+                Map<Integer, Integer> collectionSize1 = new TreeMap<>(Map.of(1, 200, 2, 1, 3, 1, 4, 4, 5, 10));
+                Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 20));
+                applicationDistribution.put(1, collectionSize1);
+                applicationDistribution.put(2, collectionSize2);
+                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
+            }
+            case 2 -> {
+                numberOfCollections = 2;
+                Map<Integer, Integer> collectionSize1 = new TreeMap<>(Map.of(1, 200));
+                Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 20));
+                applicationDistribution.put(1, collectionSize1);
+                applicationDistribution.put(2, collectionSize2);
+                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
+            }
+            case 3 -> {
+                numberOfCollections = 1;
+                applicationsProvider = new CustomApplicationsProvider();
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + DATASET);
+        }
 
         var topicsByMaxSlotSize = courseAndTopicProvider.topicsByMaxSlotSize();
         // key 1 -> All topics that a group size 1 can apply to, etc.
@@ -76,9 +122,17 @@ public class Provider {
             graph.addEdge(application.toString(), application.topic().name(), application.group().toString(), false);
             Edge edge = graph.getEdge(application.toString());
             edge.setAttribute("data", application);
+
+            double logProportion = 1 - Math.log10(application.priority()) / Math.log10(10);
+
+            int red = 0;
+            int green = (int) Math.round(255 * logProportion);
+            int blue = Math.round((float) (application.collectionID() * 255) / numberOfCollections);
+
+            edge.setAttribute("ui.style", "fill-color: rgb(" + red + ", " + green + ", " + blue + "); z-index: -" + Math.abs(application.hashCode()) + ";");
         });
 
-        Util.repaintGraph(graph, this);
+        Util.repaintGraph(graph);
 
         System.out.println("\n <--- GEN FINISHED ---> \n");
         courseAndTopicProvider.getTopicList().forEach(System.out::println);

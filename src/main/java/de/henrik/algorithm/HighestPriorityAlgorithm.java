@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import static de.henrik.algorithm.Util.highlightElement;
+
+
 /**
  * This algorithm has one cycle.
  * It iterates over all topics and takes the application with the highest priority from any group that has not been assigned so far.
@@ -33,7 +36,8 @@ public class HighestPriorityAlgorithm extends Algorithm {
         for (Topic topic : provider.courseAndTopicProvider.getTopicList()) {
             //go through all slots for this topic
             //paint topic we are looking at
-            graph.getNode(topic.name()).setAttribute("ui.style", "fill-color: rgb(255, 0, 0);");
+            if (slow)
+                highlightElement(graph.getNode(topic.name()));
             checkPause();
 
             if (!applicationHashMap.containsTopic(topic)) continue;
@@ -43,14 +47,10 @@ public class HighestPriorityAlgorithm extends Algorithm {
                     continue;
                 }
                 var possibleApplications = applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft());
-                for (Application app : possibleApplications) {
-                    var edge = graph.getEdge(app.toString());
-                    if (!acceptedApplications.contains(edge.getAttribute("data", Application.class))) {
-                        edge.setAttribute("ui.style", "fill-color: rgb(200, 200, 100);");
-                    }
-                }
-                //sort the applications by priority
+                //sort the applications by priority (they should be sorted but we do this for safety)
                 possibleApplications.sort(Comparator.comparingInt(Application::priority));
+                if (slow)
+                    possibleApplications.forEach(app -> highlightElement(graph.getEdge(app.toString())));
                 checkPause();
 
                 // we do single topics and group topics separately cause single topics are easier, and we have way more of them
@@ -62,7 +62,8 @@ public class HighestPriorityAlgorithm extends Algorithm {
                     applicationHashMap.removeAllWithSameKey(app);
 
                     //Repaint the edge
-                    graph.getEdge(app.toString()).setAttribute("ui.style", "fill-color: rgb(255, 0, 0);");
+                    if (slow)
+                        highlightElement(graph.getEdge(app.toString()));
                     checkPause();
                 } else {
                     // if we do a group assignment we need to do it in the following way:
@@ -71,57 +72,49 @@ public class HighestPriorityAlgorithm extends Algorithm {
                     // then we look over all the applications in a combination that could completely fill the slot
                     // if that is not possible we take the biggest combination of applications that is possible
                     // if no combinations are possible or are big enough we go to the next slot
-                    possibleApplications.sort(Comparator.comparingInt(Application::size));
-                    int remainingSize = slot.spaceLeft();
-
-                    //this can be optimized, and prob won't work for big stuff!!!
-                    //get all possible combinations and remove all that are too big or too small
-                    List<List<Application>> possibleCombinations = Util.generateDifferentPermutations(possibleApplications);
-                    List<List<Application>> combinationsToRemove = new ArrayList<>();
-                    for (var combination : possibleCombinations) {
-                        var combParticipants = combination.stream().mapToInt(Application::size).sum();
-                        if (combParticipants > remainingSize || combParticipants < slot.slotSize().first() + slot.participants()) {
-                            combinationsToRemove.add(combination);
-                        }
-                    }
-                    possibleCombinations.removeAll(combinationsToRemove);
-                    // if we have no possible combinations we go to the next slot
-                    if (possibleCombinations.size() == 0) {
-                        continue;
-                    }
-
-
-                    // sort after the biggest one with the lowest combined priority
-                    possibleCombinations.sort((o1, o2) -> {
-                        int o1Size = o1.stream().mapToInt(Application::size).sum();
-                        int o2Size = o2.stream().mapToInt(Application::size).sum();
-                        if (o1Size == o2Size) {
-                            int o1Prio = o1.stream().mapToInt(Application::priority).sum();
-                            int o2Prio = o2.stream().mapToInt(Application::priority).sum();
-                            return Integer.compare(o1Prio, o2Prio);
-                        }
-                        return Integer.compare(o2Size, o1Size);
-                    });
-                    // take the first one
-                    var applications = possibleCombinations.get(0);
-                    for (Application app : applications) {
-                        acceptedApplications.add(app);
-                        slot.acceptApplication(app);
-                        applicationHashMap.removeAllWithSameKey(app);
-                        graph.getEdge(app.toString()).setAttribute("ui.style", "fill-color: rgb(255, 0, 0);");
-                        checkPause();
-                    }
-                }
-
-                synchronized (this) {
-                    try {
-                        wait(100);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+//                    possibleApplications.sort(Comparator.comparingInt(Application::size));
+//                    int remainingSize = slot.spaceLeft();
+//
+//                    //this can be optimized, and prob won't work for big stuff!!!
+//                    //get all possible combinations and remove all that are too big or too small
+//                    List<List<Application>> possibleCombinations = Util.generateDifferentPermutations(possibleApplications);
+//                    List<List<Application>> combinationsToRemove = new ArrayList<>();
+//                    for (var combination : possibleCombinations) {
+//                        var combParticipants = combination.stream().mapToInt(Application::size).sum();
+//                        if (combParticipants > remainingSize || combParticipants < slot.slotSize().first() + slot.participants()) {
+//                            combinationsToRemove.add(combination);
+//                        }
+//                    }
+//                    possibleCombinations.removeAll(combinationsToRemove);
+//                    // if we have no possible combinations we go to the next slot
+//                    if (possibleCombinations.size() == 0) {
+//                        continue;
+//                    }
+//
+//
+//                    // sort after the biggest one with the lowest combined priority
+//                    possibleCombinations.sort((o1, o2) -> {
+//                        int o1Size = o1.stream().mapToInt(Application::size).sum();
+//                        int o2Size = o2.stream().mapToInt(Application::size).sum();
+//                        if (o1Size == o2Size) {
+//                            int o1Prio = o1.stream().mapToInt(Application::priority).sum();
+//                            int o2Prio = o2.stream().mapToInt(Application::priority).sum();
+//                            return Integer.compare(o1Prio, o2Prio);
+//                        }
+//                        return Integer.compare(o2Size, o1Size);
+//                    });
+//                    // take the first one
+//                    var applications = possibleCombinations.get(0);
+//                    for (Application app : applications) {
+//                        acceptedApplications.add(app);
+//                        slot.acceptApplication(app);
+//                        applicationHashMap.removeAllWithSameKey(app);
+//                        highlightElement(graph.getEdge(app.toString()));
+//                        checkPause();
+//                    }
                 }
             }
-            Util.repaintGraph(graph, provider);
+            Util.repaintGraph(graph);
         }
     }
 }

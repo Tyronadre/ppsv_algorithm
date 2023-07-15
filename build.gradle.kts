@@ -1,9 +1,12 @@
 plugins {
-    id("java")
+    `java-library`
+    id("org.springframework.boot") version "3.1.1"
 }
 
+apply(plugin = "io.spring.dependency-management")
+
 group = "de.henrik"
-version = "1.0-SNAPSHOT"
+version = "0.1.13"
 
 repositories {
     mavenCentral()
@@ -19,4 +22,11 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "de.henrik.Main"
+    }
+    from(sourceSets.main.get().output)
 }

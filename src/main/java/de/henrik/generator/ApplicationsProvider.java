@@ -6,9 +6,14 @@ import java.util.*;
 
 public class ApplicationsProvider {
     public final long seed;
-    private final ConcurrentApplicationHashMap applicationsHashMap;
-    private final Map<Integer, Map<Integer, Integer>> applicationsPerGroupSizePerCollection;
+    protected final ConcurrentApplicationHashMap applicationsHashMap;
+    protected final Map<Integer, Map<Integer, Integer>> applicationsPerGroupSizePerCollection;
 
+    /**
+     *
+     * @param seed  the seed
+     * @param applicationsPerGroupSizePerCollection a map how many applications per group should be generated per collection of that group. this should be possible with the provided number of topics and students, or this providers generate will fail eventually
+     */
     public ApplicationsProvider(long seed, Map<Integer, Map<Integer, Integer>> applicationsPerGroupSizePerCollection) {
         this.seed = seed;
         this.applicationsPerGroupSizePerCollection = applicationsPerGroupSizePerCollection;
@@ -59,7 +64,9 @@ public class ApplicationsProvider {
                         topicsForGroup.remove(group);
                     }
                     var prio = applicationsHashMap.getByKey(new Tupel<>(group, collectionID));
-                    applicationsHashMap.add(new Application(group, topic, collectionID, prio == null ? 1 : prio.size() + 1));
+                    var app = new Application(group, topic, collectionID, prio == null ? 1 : prio.size() + 1);
+                    applicationsHashMap.add(app);
+                    group.applications().add(app);
                     if (!groupsWithCollection.get(collectionID).contains(group)) {
                         groupsWithCollection.get(collectionID).add(group);
                     }

@@ -30,9 +30,10 @@ public class Score {
 
         for (var uniqueApplication : applicationsByKey.values()) {
             if (acceptedApplicationsByKey.containsKey(uniqueApplication.getGroupAndCollectionKey())) {
-                score += uniqueApplication.size() * (10 - uniqueApplication.priority());
-                acceptedApplicationsPrioMap.computeIfPresent(uniqueApplication.priority(), (k, v) -> new IntegerTupel(uniqueApplication.size() + v.first(), v.second() + 1));
-                acceptedApplicationsPrioMap.computeIfAbsent(uniqueApplication.priority(), k -> new IntegerTupel(uniqueApplication.size(), 1));
+                var app = acceptedApplicationsByKey.get(uniqueApplication.getGroupAndCollectionKey());
+                score += app.size() * (10 - app.priority());
+                acceptedApplicationsPrioMap.computeIfPresent(app.priority(), (k, v) -> new IntegerTupel(app.size() + v.first(), v.second() + 1));
+                acceptedApplicationsPrioMap.computeIfAbsent(app.priority(), k -> new IntegerTupel(app.size(), 1));
             } else {
                 score -= 10 - uniqueApplication.priority();
                 acceptedApplicationsPrioMap.computeIfPresent(0, (k, v) -> new IntegerTupel(uniqueApplication.size() + v.first(), v.second() + 1));
@@ -47,11 +48,11 @@ public class Score {
                 if (slot.spaceLeft() > 0)
                     openSlots.add(new Tupel<>(topic, slot));
 
-        System.out.println(" // --- Score --- // ");
+        System.out.println(" // --- Score --- // \n (Prio 0 -> not accepted)");
         System.out.println("Score: " + score);
-        acceptedApplicationsPrioMap.forEach((k, v) -> System.out.println("Prio " + k + ": " + v.first() + "/" + v.second()));
+        acceptedApplicationsPrioMap.forEach((k, v) -> System.out.println("Prio " + k + " (Students/Groups): " + v.first() + "/" + v.second()));
         System.out.println(" // --- Open Applications --- // ");
-        openApplications.forEach(System.out::println);
+        openApplications.forEach(a -> System.out.println(a.getGroupAndCollectionKey() + ": Apps: " + a.group().applications().toString()));
         System.out.println(" // --- Open Slots --- // ");
         openSlots.forEach(t -> System.out.println(t.first().name() + ": Slot " + t.second().ID() + "; " + t.second().spaceLeft() + "; minSize: " + t.second().slotSize().first()));
 

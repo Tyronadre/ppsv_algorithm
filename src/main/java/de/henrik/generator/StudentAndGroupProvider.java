@@ -10,8 +10,8 @@ public class StudentAndGroupProvider {
     private final int studentCount;
     private final Map<Integer, Integer> groupSizeToNumberOfStudents;
 
-    private List<Student> studentList;
-    private Map<Integer, List<Group>> groupsBySize;
+    protected List<Student> studentList;
+    protected Map<Integer, List<Group>> groupsBySize;
 
     public StudentAndGroupProvider(long seed, int studentCount, Map<Integer, Integer> groupSizeToNumberOfStudents) {
         this.seed = seed;
@@ -27,6 +27,9 @@ public class StudentAndGroupProvider {
     }
 
     public Map<Integer, List<Group>> getGroupsBySize() {
+        if (groupsBySize == null) {
+            throw new RuntimeException("Call generator first!");
+        }
         return groupsBySize;
     }
 
@@ -62,7 +65,7 @@ public class StudentAndGroupProvider {
                 if (groupsBySize.get(groupSize).stream().anyMatch(group -> new HashSet<>(group.students()).containsAll(tempGroupList))) {
                     continue;
                 }
-                groupsBySize.get(groupSize).add(new Group(tempGroupList));
+                groupsBySize.get(groupSize).add(new Group(tempGroupList, new ArrayList<>()));
                 generatedGroups++;
             }
         }
