@@ -16,7 +16,7 @@ public abstract class Algorithm implements Runnable {
     protected boolean oneStep = false;
     protected boolean pause = false;
     protected boolean slow = true;
-    public static final int SLOW_TIME = 10;
+    public static final int SLOW_TIME = 500;
     Random random;
     Long seed;
 
@@ -43,6 +43,8 @@ public abstract class Algorithm implements Runnable {
             System.out.println("Starting Algorithm with seed " + seed + " slow " + slow + " verbose " + verbose);
             startAlgorithm();
             System.out.println("Algorithm finished");
+            Score.score(provider);
+            CheckErrors.check(provider);
             running = false;
         }
     }

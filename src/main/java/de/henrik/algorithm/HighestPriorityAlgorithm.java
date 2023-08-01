@@ -1,16 +1,16 @@
 package de.henrik.algorithm;
 
 import de.henrik.data.Application;
+import de.henrik.data.IntegerTupel;
 import de.henrik.data.Slot;
 import de.henrik.data.Topic;
 import de.henrik.generator.Provider;
 import org.graphstream.graph.Graph;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 import static de.henrik.algorithm.Util.highlightElement;
+import static de.henrik.algorithm.Util.highlightElement2;
 
 
 /**
@@ -25,23 +25,75 @@ public class HighestPriorityAlgorithm extends Algorithm {
         super(seed, provider, graph);
     }
 
+    public static List<Application> multiObjectiveKnapsack(List<Application> applications, int maxSize) {
+        int n = applications.size();
+        //FIRST -> SIZE; SECOND -> PRIORITY
+        applications.sort(Comparator.comparingInt(Application::size));
+        IntegerTupel[][] dp = new IntegerTupel[n + 1][maxSize + 1];
+        HashMap<IntegerTupel, List<Application>> selectedApplications = new HashMap<>();
+        for (int i = 0; i <= n; i++) {
+            for (int j = 0; j <= maxSize; j++) {
+                dp[i][j] = new IntegerTupel(0, 0);
+            }
+        }
+
+        Comparator<IntegerTupel> comparator = (o1, o2) -> {
+            if (!Objects.equals(o1.first(), o2.first())) {
+                return o1.first() - o2.first();
+            } else {
+                return o2.second() - o1.second();
+            }
+        };
+
+        for (int i = 1; i <= n; i++) {
+            Application app = applications.get(i - 1);
+
+            for (int j = 1; j <= maxSize; j++) {
+                if (app.size() > j) {
+                    //App passt nicht rein, also Wert von davor übernehmen falls wir einen haben
+                    dp[i][j] = dp[i - 1][j];
+                    selectedApplications.put(new IntegerTupel(i, j), new ArrayList<>(selectedApplications.getOrDefault(new IntegerTupel(i - 1, j), new ArrayList<>())));
+                } else {
+                    //App passt rein, also gucken ob sie besser ist als was wir davor hatten
+                    var newTupel = new IntegerTupel(dp[i - 1][j - app.size()].first() + app.size(), dp[i - 1][j - app.size()].second() + app.priority());
+                    if (comparator.compare(dp[i - 1][j], newTupel) > 0) {
+                        //Schlechter
+                        dp[i][j] = dp[i - 1][j];
+                        selectedApplications.put(new IntegerTupel(i, j), new ArrayList<>(selectedApplications.getOrDefault(new IntegerTupel(i - 1, j), new ArrayList<>())));
+                    } else {
+                        //Besser
+                        dp[i][j] = newTupel;
+                        selectedApplications.put(new IntegerTupel(i, j), new ArrayList<>(selectedApplications.getOrDefault(new IntegerTupel(i - 1, j - app.size()), new ArrayList<>())));
+                        selectedApplications.get(new IntegerTupel(i, j)).add(app);
+                    }
+
+                }
+            }
+        }
+        return selectedApplications.get(new IntegerTupel(n, maxSize));
+    }
+
     @Override
     @SuppressWarnings("Duplicates")
     void startAlgorithm() {
         var applicationHashMap = provider.applicationsProvider.getConcurrentApplicationHashMap();
 
-        List<Application> acceptedApplications = new ArrayList<>();
+        float maxCount = 0f;
+        for (var t : provider.courseAndTopicProvider.getTopicList()) {
+            maxCount += t.slots().size();
+        }
+        int count = 0;
 
         //we take a random application and take it
         for (Topic topic : provider.courseAndTopicProvider.getTopicList()) {
             //go through all slots for this topic
             //paint topic we are looking at
-            if (slow)
-                highlightElement(graph.getNode(topic.name()));
+            if (slow) highlightElement(graph.getNode(topic.name()));
             checkPause();
 
             if (!applicationHashMap.containsTopic(topic)) continue;
             for (Slot slot : topic.slots()) {
+                System.out.print("Progress " + String.format("%.2f", ((count++ / maxCount) * 100)) + "%           \r");
                 //check if we have topics and if yes get them and paint them else go to the next slot
                 if (applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft()) == null || applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft()).size() == 0) {
                     continue;
@@ -49,70 +101,29 @@ public class HighestPriorityAlgorithm extends Algorithm {
                 var possibleApplications = applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft());
                 //sort the applications by priority (they should be sorted but we do this for safety)
                 possibleApplications.sort(Comparator.comparingInt(Application::priority));
-                if (slow)
-                    possibleApplications.forEach(app -> highlightElement(graph.getEdge(app.toString())));
+                if (slow) possibleApplications.forEach(app -> highlightElement(graph.getEdge(app.toString())));
                 checkPause();
 
                 // we do single topics and group topics separately cause single topics are easier, and we have way more of them
                 if (slot.spaceLeft() == 1) {
                     //Get the application with the highest prio and accept it
                     var app = possibleApplications.get(0);
-                    acceptedApplications.add(app);
                     slot.acceptApplication(app);
                     applicationHashMap.removeAllWithSameKey(app);
 
                     //Repaint the edge
-                    if (slow)
-                        highlightElement(graph.getEdge(app.toString()));
-                    checkPause();
+                    if (slow) highlightElement2(graph.getEdge(app.toString()));
                 } else {
-                    // if we do a group assignment we need to do it in the following way:
-                    // first we save how many applications are still fitting in the slot
-                    // then we remove all applications that are too big
-                    // then we look over all the applications in a combination that could completely fill the slot
-                    // if that is not possible we take the biggest combination of applications that is possible
-                    // if no combinations are possible or are big enough we go to the next slot
-//                    possibleApplications.sort(Comparator.comparingInt(Application::size));
-//                    int remainingSize = slot.spaceLeft();
-//
-//                    //this can be optimized, and prob won't work for big stuff!!!
-//                    //get all possible combinations and remove all that are too big or too small
-//                    List<List<Application>> possibleCombinations = Util.generateDifferentPermutations(possibleApplications);
-//                    List<List<Application>> combinationsToRemove = new ArrayList<>();
-//                    for (var combination : possibleCombinations) {
-//                        var combParticipants = combination.stream().mapToInt(Application::size).sum();
-//                        if (combParticipants > remainingSize || combParticipants < slot.slotSize().first() + slot.participants()) {
-//                            combinationsToRemove.add(combination);
-//                        }
-//                    }
-//                    possibleCombinations.removeAll(combinationsToRemove);
-//                    // if we have no possible combinations we go to the next slot
-//                    if (possibleCombinations.size() == 0) {
-//                        continue;
-//                    }
-//
-//
-//                    // sort after the biggest one with the lowest combined priority
-//                    possibleCombinations.sort((o1, o2) -> {
-//                        int o1Size = o1.stream().mapToInt(Application::size).sum();
-//                        int o2Size = o2.stream().mapToInt(Application::size).sum();
-//                        if (o1Size == o2Size) {
-//                            int o1Prio = o1.stream().mapToInt(Application::priority).sum();
-//                            int o2Prio = o2.stream().mapToInt(Application::priority).sum();
-//                            return Integer.compare(o1Prio, o2Prio);
-//                        }
-//                        return Integer.compare(o2Size, o1Size);
-//                    });
-//                    // take the first one
-//                    var applications = possibleCombinations.get(0);
-//                    for (Application app : applications) {
-//                        acceptedApplications.add(app);
-//                        slot.acceptApplication(app);
-//                        applicationHashMap.removeAllWithSameKey(app);
-//                        highlightElement(graph.getEdge(app.toString()));
-//                        checkPause();
-//                    }
+                    var combination = multiObjectiveKnapsack(possibleApplications, slot.spaceLeft());
+                    if (combination.stream().mapToInt(Application::size).sum() >= slot.slotSize().first() + slot.participants()) {
+                        combination.forEach(app -> {
+                            slot.acceptApplication(app);
+                            applicationHashMap.removeAllWithSameKey(app);
+                            if (slow) highlightElement2(graph.getEdge(app.toString()));
+                        });
+                    }
                 }
+                checkPause();
             }
             Util.repaintGraph(graph);
         }

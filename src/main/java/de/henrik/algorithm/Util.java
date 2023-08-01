@@ -1,9 +1,6 @@
 package de.henrik.algorithm;
 
 import de.henrik.data.Application;
-import de.henrik.data.Topic;
-import de.henrik.generator.Provider;
-import org.graphstream.graph.Edge;
 import org.graphstream.graph.Element;
 import org.graphstream.graph.Graph;
 
@@ -65,10 +62,22 @@ public class Util {
         addElementClass(element, "standout");
     }
 
+    public static void highlightElement2(Element element) {
+        addElementClass(element, "standout2");
+    }
+
     public static void unhighlightElement(Element element) {
         String currentClasses = element.getAttribute("ui.class",String.class);
         if (currentClasses.contains("standout")) {
             String newClasses = currentClasses.replace("standout", "");
+            element.setAttribute("ui.class", newClasses);
+        }
+    }
+
+    public static void unhighlightElement2(Element element) {
+        String currentClasses = element.getAttribute("ui.class",String.class);
+        if (currentClasses.contains("standout2")) {
+            String newClasses = currentClasses.replace("standout2", "");
             element.setAttribute("ui.class", newClasses);
         }
     }
