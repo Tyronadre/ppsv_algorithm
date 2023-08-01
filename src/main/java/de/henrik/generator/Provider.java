@@ -11,9 +11,9 @@ import org.graphstream.graph.Node;
 import java.util.*;
 
 public class Provider {
-//    long seed = new Random().nextLong();
-    public static final int DATASET = 4;
-        long seed = 0;
+    //    long seed = new Random().nextLong();
+    public static final int DATASET = 2;
+    long seed = 0;
     public CourseAndTopicProvider courseAndTopicProvider;
     public StudentAndGroupProvider studentAndGroupProvider;
     public ApplicationsProvider applicationsProvider;
@@ -21,14 +21,17 @@ public class Provider {
     public void fillGraph(Graph graph) {
         System.out.println("\n<--- COURSE AND TOPICS --->\n");
         courseAndTopicProvider = switch (DATASET) {
+            case -1 -> new CustomCourseAndTopicProvider();
             case 0 ->
                     new CourseAndTopicProvider(seed, new IntegerTupel(170, 180), new IntegerTupel(3, 6), new IntegerTupel(20, 30), new IntegerTupel(4, 5), new IntegerTupel(3, 5), new IntegerTupel(2, 3), 5);
             case 1 ->
                     new CourseAndTopicProvider(seed, new IntegerTupel(10, 10), new IntegerTupel(4, 4), new IntegerTupel(1, 1), new IntegerTupel(4, 4), new IntegerTupel(3, 3), new IntegerTupel(2, 2), 5);
             case 2 ->
                     new CourseAndTopicProvider(seed, new IntegerTupel(15, 15), new IntegerTupel(4, 4), new IntegerTupel(1, 1), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), 0);
-            case 3 -> new CustomCourseAndTopicProvider();
-            case 4 -> new CourseAndTopicProvider(seed, new IntegerTupel(20000,20000),new IntegerTupel(5,5), new IntegerTupel(1,1), new IntegerTupel(0,0), new IntegerTupel(0,0), new IntegerTupel(0,0), 0);
+            case 3 ->
+                    new CourseAndTopicProvider(seed, new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(5, 5), new IntegerTupel(5, 5), new IntegerTupel(1, 1), 5);
+            case 4 ->
+                    new CourseAndTopicProvider(seed, new IntegerTupel(20000, 20000), new IntegerTupel(5, 5), new IntegerTupel(1, 1), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), 0);
             default -> throw new IllegalStateException("Unexpected value: " + DATASET);
         };
 
@@ -47,11 +50,13 @@ public class Provider {
 
         System.out.println("\n<--- STUDENT AND GROUPS --->\n");
         studentAndGroupProvider = switch (DATASET) {
+            case -1 -> new CustomStudentAndGroupProvider();
             case 0 -> new StudentAndGroupProvider(seed, 1000, new TreeMap<>(Map.of(1, 900, 2, 5, 3, 5, 4, 10, 5, 20)));
             case 1 -> new StudentAndGroupProvider(seed, 50, new TreeMap<>(Map.of(1, 30, 2, 1, 3, 1, 4, 2, 5, 3)));
             case 2 -> new StudentAndGroupProvider(seed, 50, new TreeMap<>(Map.of(1, 50)));
-            case 3 -> new CustomStudentAndGroupProvider();
-            case 4 -> new StudentAndGroupProvider(seed, 50000, new TreeMap<>(Map.of(1, 9000, 2, 5, 3, 5, 4, 10, 5, 20)));
+            case 3 -> new StudentAndGroupProvider(seed, 50, new TreeMap<>(Map.of(1, 50)));
+            case 4 ->
+                    new StudentAndGroupProvider(seed, 50000, new TreeMap<>(Map.of(1, 9000, 2, 5, 3, 5, 4, 10, 5, 20)));
             default -> throw new IllegalStateException("Unexpected value: " + DATASET);
         };
         studentAndGroupProvider.generate();
@@ -73,6 +78,10 @@ public class Provider {
         Map<Integer, Map<Integer, Integer>> applicationDistribution = new TreeMap<>();
         int numberOfCollections;
         switch (DATASET) {
+            case -1 -> {
+                numberOfCollections = 1;
+                applicationsProvider = new CustomApplicationsProvider();
+            }
             case 0 -> {
                 numberOfCollections = 3;
                 Map<Integer, Integer> collectionSize1 = new TreeMap<>(Map.of(1, 4500, 2, 7, 3, 7, 4, 30, 5, 100));
@@ -100,10 +109,13 @@ public class Provider {
                 applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
             }
             case 3 -> {
-                numberOfCollections = 1;
-                applicationsProvider = new CustomApplicationsProvider();
+                numberOfCollections = 2;
+                Map<Integer, Integer> collectionSize1 = new TreeMap<>(Map.of(1, 200));
+                Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 20));
+                applicationDistribution.put(1, collectionSize1);
+                applicationDistribution.put(2, collectionSize2);
+                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
             }
-
             case 4 -> {
                 numberOfCollections = 2;
                 Map<Integer, Integer> collectionSize1 = new TreeMap<>(Map.of(1, 200000));

@@ -12,7 +12,7 @@ public class CustomCourseAndTopicProvider extends CourseAndTopicProvider{
      *
      */
     public CustomCourseAndTopicProvider() {
-        super(0, new IntegerTupel(0,0), new IntegerTupel(0,0), new IntegerTupel(0,0), new IntegerTupel(0,0), new IntegerTupel(0,0), new IntegerTupel(0,0), 0);
+        super(0, new IntegerTupel(0,0), new IntegerTupel(0,0), new IntegerTupel(0,0), new IntegerTupel(0,0), new IntegerTupel(0,0), new IntegerTupel(0,0), 5);
     }
 
     @Override
@@ -20,16 +20,11 @@ public class CustomCourseAndTopicProvider extends CourseAndTopicProvider{
         courseList = new ArrayList<>();
         topicList = new ArrayList<>();
 
-        //Normal Topics
-        int courseCount = 5;
-        int topicCount = 2;
-        for (int courseI = 0; courseI < courseCount; courseI++) {
-            Course course = new Course("Course " + courseI);
-            courseList.add(course);
-            for (int topicI = 0; topicI < topicCount; topicI++) {
-                Topic topic = new Topic(course.name() + " Topic " + topicI, course, new IntegerTupel(1, 1), 1);
-                topicList.add(topic);
-            }
-        }
+        var c = new Course ("Course 0");
+        courseList.add(c);
+        topicList.add(new Topic("Topic 0", c, new IntegerTupel(3,5), 1));
+        topicList.add(new Topic("Topic 1", c, new IntegerTupel(3,5), 1));
+        topicList.add(new Topic("Topic 2", c, new IntegerTupel(3,5), 1));
+        topicList.add(new Topic("Topic 3", c, new IntegerTupel(3,5), 1));
     }
 }

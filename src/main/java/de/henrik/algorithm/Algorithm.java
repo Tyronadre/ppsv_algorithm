@@ -43,6 +43,8 @@ public abstract class Algorithm implements Runnable {
             System.out.println("Starting Algorithm with seed " + seed + " slow " + slow + " verbose " + verbose);
             startAlgorithm();
             System.out.println("Algorithm finished");
+            Score.score(provider);
+            CheckErrors.check(provider);
             running = false;
         }
     }

@@ -37,6 +37,11 @@ public class Main {
             edge.standout {
                 size: 4px;
             }
+            
+            edge.standout2 {
+                size: 4px;
+                fill-color: rgb(240,0,0);
+            }
             """;
 
     public static void main(String[] args) {
@@ -107,7 +112,6 @@ public class Main {
 
         JButton score = new JButton("Score");
         score.addActionListener(e -> Score.score(provider));
-
 
         // --- ALGORITHMS --- //
 
@@ -241,6 +245,7 @@ public class Main {
         buttonPanel.add(checkErrors, c);
         c.gridy++;
         buttonPanel.add(score, c);
+        c.gridy++;
 
         c.gridx = 1;
         c.gridy = 0;
