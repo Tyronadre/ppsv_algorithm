@@ -25,14 +25,33 @@ public class CustomApplicationsProvider extends ApplicationsProvider {
 
         newApp(0, 0,1 );
         newApp(0, 1,2 );
-        newApp(0, 2,4 );
-        newApp(0,3,3);
+        newApp(0, 2,2 );
+        newApp(0, 3,3 );
         newApp(1, 0, 1);
-        newApp(1, 1, 3);
-        newApp(1, 2, 2);
+        newApp(1, 3, 2);
         newApp(2, 0, 2);
         newApp(2, 1, 1);
         newApp(2, 2, 3);
+
+        groups = groupsBySize.get(2);
+        newApp(0, 0, 1);
+        newApp(0, 1, 2);
+        newApp(1, 0, 3);
+        newApp(1, 1, 2);
+        newApp(1, 2, 1);
+        newApp(2, 0, 1);
+        newApp(2, 1, 2);
+        newApp(2, 3, 3);
+
+        groups = groupsBySize.get(3);
+        newApp(0, 0, 1);
+        newApp(0, 1, 2);
+        newApp(1, 0, 1);
+        newApp(1, 1, 2);
+        newApp(2, 0, 1);
+        newApp(2,3,2);
+        newApp(2, 1, 3);
+
 
     }
 

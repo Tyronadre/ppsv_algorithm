@@ -138,7 +138,7 @@ public class KnapsackAlgorithm {
         int minSize = 4;
         int maxSize = 5;
 
-        List<Application> selectedApplications = knapsack(applications, minSize, maxSize);
+        List<Application> selectedApplications = knapsack(applications, maxSize);
 
         int minPriority = 0;
         for (Application app : selectedApplications) {
@@ -152,7 +152,7 @@ public class KnapsackAlgorithm {
         }
 
 
-        List<Application> selectedApplications2 = multiObjectiveKnapsack(applications, minSize, maxSize);
+        List<Application> selectedApplications2 = multiObjectiveKnapsack(applications, maxSize);
         System.out.println("Multi-Objective Knapsack:");
         selectedApplications2.forEach(System.out::println);
 

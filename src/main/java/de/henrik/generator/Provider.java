@@ -12,7 +12,7 @@ import java.util.*;
 
 public class Provider {
 //    long seed = new Random().nextLong();
-    public static final int DATASET = 3;
+    public static final int DATASET = -1;
         long seed = 0;
     public CourseAndTopicProvider courseAndTopicProvider;
     public StudentAndGroupProvider studentAndGroupProvider;
