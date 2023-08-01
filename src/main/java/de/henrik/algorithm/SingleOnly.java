@@ -44,7 +44,7 @@ public class SingleOnly extends Algorithm {
             int counter = 0;
             for (Group group : groups) {
                 for (int collectionID = 1; collectionID <= group.getCollectionSize(); collectionID++) {
-                    System.out.println("\rProgress " + String.format("%.2f", ((counter++ + collectionID - 1) / allKeys) * 100) + "%           \r");
+                    System.out.print("Progress " + String.format("%.2f", ((counter++ + collectionID - 1) / allKeys) * 100) + "%           \r");
                     //Paint Group
                     if (slow) highlightElement(graph.getNode(group.toString()));
                     checkPause();

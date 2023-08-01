@@ -33,6 +33,8 @@ public class HighestPriorityAlgorithm extends Algorithm {
         List<Application> acceptedApplications = new ArrayList<>();
 
         //we take a random application and take it
+        var counter = 0;
+        var maxCounter = provider.courseAndTopicProvider.getTopicList().stream().mapToInt(topic -> topic.slots().size()).sum();
         for (Topic topic : provider.courseAndTopicProvider.getTopicList()) {
             //go through all slots for this topic
             //paint topic we are looking at
@@ -42,6 +44,7 @@ public class HighestPriorityAlgorithm extends Algorithm {
 
             if (!applicationHashMap.containsTopic(topic)) continue;
             for (Slot slot : topic.slots()) {
+                System.out.print(counter + "/" + maxCounter + "\r");
                 //check if we have topics and if yes get them and paint them else go to the next slot
                 if (applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft()) == null || applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft()).size() == 0) {
                     continue;

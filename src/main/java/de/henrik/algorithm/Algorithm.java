@@ -16,7 +16,7 @@ public abstract class Algorithm implements Runnable {
     protected boolean oneStep = false;
     protected boolean pause = false;
     protected boolean slow = true;
-    public static final int SLOW_TIME = 10;
+    public static final int SLOW_TIME = 100;
     Random random;
     Long seed;
 
@@ -53,12 +53,6 @@ public abstract class Algorithm implements Runnable {
 
     void checkPause() {
         synchronized (this) {
-            //wait for gui
-            try {
-                wait(1);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
             while (pause && !oneStep) {
                 try {
                     wait(100);
@@ -71,15 +65,14 @@ public abstract class Algorithm implements Runnable {
                 oneStep = false;
                 pause = true;
             }
-        }
-        if (slow)
-            synchronized (this) {
+            if (slow)
+
                 try {
                     wait(SLOW_TIME);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-            }
+        }
     }
 
     @SuppressWarnings("Duplicates")

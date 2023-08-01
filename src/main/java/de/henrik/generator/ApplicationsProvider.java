@@ -10,8 +10,7 @@ public class ApplicationsProvider {
     protected final Map<Integer, Map<Integer, Integer>> applicationsPerGroupSizePerCollection;
 
     /**
-     *
-     * @param seed  the seed
+     * @param seed                                  the seed
      * @param applicationsPerGroupSizePerCollection a map how many applications per group should be generated per collection of that group. this should be possible with the provided number of topics and students, or this providers generate will fail eventually
      */
     public ApplicationsProvider(long seed, Map<Integer, Map<Integer, Integer>> applicationsPerGroupSizePerCollection) {
@@ -43,16 +42,23 @@ public class ApplicationsProvider {
                     possibleGroups.retainAll(groupsWithCollection.get(collectionID - 1));
                 }
                 //Get all possible Topics for each group
+                // TODO: 19.07.2023 Kann effizienter gemacht werden, wenn ich einmal alle ausrechne und dann rausnehme, was keine anmeldung im ersten cycle hat.
                 var topicsForGroup = new TreeMap<Group, List<Topic>>(Comparator.comparing(Group::toString));
+                var counter = 0;
+                var maxcounter = possibleGroups.size() * topicByAtMinSize.get(groupSize).size();
                 for (Group group : possibleGroups) {
                     for (Topic topic : topicByAtMinSize.get(groupSize)) {
+                        if (counter++ % 100 == 0)
+                            System.out.print(counter + "/" + maxcounter + "\r");
                         if (applicationsHashMap.containsTopic(topic) && applicationsHashMap.getByTopic(topic).stream().anyMatch(application -> application.group().equals(group))) {
                             continue;
                         }
                         topicsForGroup.computeIfAbsent(group, k -> new ArrayList<>()).add(topic);
                     }
                 }
+                System.out.println("\n");
                 for (int i = 0; i < applicationsPerCollection.get(groupSize); i++) {
+                    System.out.print(i + " of " + applicationsPerCollection.get(groupSize) + " for collection " + collectionID + " and group size " + groupSize + "\r");
                     if (topicsForGroup.size() == 0) {
                         System.err.println("Not enough topics/groups! Generation Stopped!");
                         break;

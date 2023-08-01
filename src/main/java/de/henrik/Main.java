@@ -52,8 +52,8 @@ public class Main {
 
 
         provider.fillGraph(graph);
-        var viewer = graph.display();
-        viewer.disableAutoLayout();
+//        var viewer = graph.display();
+//        viewer.disableAutoLayout();
 
         // --- GENERAL BUTTONS --- //
         JButton jButton = new JButton("Hide Collection 1");
@@ -134,7 +134,7 @@ public class Main {
             algoPause.setText("Resume Algorithm");
         });
 
-        JButton algoSlow = new JButton("Slow Algorithm");
+        JButton algoSlow = new JButton("Fast Algorithm");
         algoSlow.addActionListener(e -> {
             if (algoSlow.getText().equals("Slow Algorithm")) {
                 algoSlow.setText("Fast Algorithm");
