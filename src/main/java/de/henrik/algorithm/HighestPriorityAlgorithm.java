@@ -9,6 +9,8 @@ import org.graphstream.graph.Graph;
 
 import java.util.*;
 
+import static de.henrik.Main.graph;
+import static de.henrik.Main.provider;
 import static de.henrik.algorithm.Util.highlightElement;
 import static de.henrik.algorithm.Util.highlightElement2;
 
@@ -21,8 +23,8 @@ import static de.henrik.algorithm.Util.highlightElement2;
  * If there are no combinations of applications that fit the slot, it will go to the next slot.
  */
 public class HighestPriorityAlgorithm extends Algorithm {
-    public HighestPriorityAlgorithm(long seed, Provider provider, Graph graph) {
-        super(seed, provider, graph);
+    public HighestPriorityAlgorithm(long seed) {
+        super(seed);
     }
 
     public static List<Application> multiObjectiveKnapsack(List<Application> applications, int maxSize) {
@@ -121,7 +123,7 @@ public class HighestPriorityAlgorithm extends Algorithm {
                 }
                 checkPause();
             }
-            Util.repaintGraph(graph);
+            Util.repaintGraph();
         }
     }
 }

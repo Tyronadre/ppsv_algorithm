@@ -51,7 +51,21 @@ public class Topic {
 
     @Override
     public String toString() {
-        return "Topic[" + "name=" + name + ", " + "course=" + course + ", " + "participants=" + slotSize + ", " + "slots=" + slots.size() + " * slotSize=" + slotSize + ']';
+        StringBuilder s = new StringBuilder();
+        s.append("Topic[" + "name=").append(name).append(", Slots:\n\t\t ");
+        for (var slot : slots) {
+            s.append("ID ").append(slot.ID()).append(": ").append(slot.participants()).append(" (");
+            for (var application : slot.applications) {
+                s.append(application.getGroupAndCollectionKey());
+                if (slot.applications.indexOf(application) != slot.applications.size() - 1) {
+                    s.append(", ");
+                }
+            }
+            s.append(")");
+            s.append("\t");
+        }
+        s.append(" ]");
+        return s.toString();
     }
 
     /**

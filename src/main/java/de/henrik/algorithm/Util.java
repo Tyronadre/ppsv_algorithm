@@ -1,5 +1,6 @@
 package de.henrik.algorithm;
 
+import de.henrik.Main;
 import de.henrik.data.Application;
 import org.graphstream.graph.Element;
 import org.graphstream.graph.Graph;
@@ -29,8 +30,9 @@ public class Util {
         }
     }
 
-    public static void repaintGraph(Graph graph) {
-        graph.edges().forEach(edge -> {
+    public static void repaintGraph() {
+
+        Main.graph.edges().forEach(edge -> {
             Application application = edge.getAttribute("data", Application.class);
             if (application.isAccepted()) {
                 edge.setAttribute("ui.class", "accepted");
@@ -38,7 +40,7 @@ public class Util {
                 edge.setAttribute("ui.class", "");
             }
         });
-        graph.nodes().forEach(node -> {
+        Main.graph.nodes().forEach(node -> {
             if (node.getAttribute("ui.class", String.class).contains("topic")) {
                 node.setAttribute("ui.class", "topic");
             } else {
@@ -59,14 +61,23 @@ public class Util {
     }
 
     public static void highlightElement(Element element) {
+        if (element == null) {
+            return;
+        }
         addElementClass(element, "standout");
     }
 
     public static void highlightElement2(Element element) {
+        if (element == null) {
+            return;
+        }
         addElementClass(element, "standout2");
     }
 
     public static void unhighlightElement(Element element) {
+        if (element == null) {
+            return;
+        }
         String currentClasses = element.getAttribute("ui.class",String.class);
         if (currentClasses.contains("standout")) {
             String newClasses = currentClasses.replace("standout", "");
@@ -75,6 +86,9 @@ public class Util {
     }
 
     public static void unhighlightElement2(Element element) {
+        if (element == null) {
+            return;
+        }
         String currentClasses = element.getAttribute("ui.class",String.class);
         if (currentClasses.contains("standout2")) {
             String newClasses = currentClasses.replace("standout2", "");

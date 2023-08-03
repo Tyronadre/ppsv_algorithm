@@ -6,6 +6,9 @@ import org.graphstream.graph.Graph;
 import scala.Int;
 
 import java.util.*;
+
+import static de.henrik.Main.graph;
+import static de.henrik.Main.provider;
 import static de.henrik.algorithm.Util.highlightElement;
 
 
@@ -15,8 +18,8 @@ import static de.henrik.algorithm.Util.highlightElement;
  * In the following iterations the algorithm will lower the priorities of all conflicting applications.
  */
 public class GreedyCycleAlgorithm extends Algorithm {
-    public GreedyCycleAlgorithm(long seed, Provider provider, Graph graph) {
-        super(seed, provider, graph);
+    public GreedyCycleAlgorithm(long seed) {
+        super(seed);
     }
 
     @Override
@@ -51,7 +54,7 @@ public class GreedyCycleAlgorithm extends Algorithm {
                 }
             }
         }
-        Util.repaintGraph(graph);
+        Util.repaintGraph();
 
         // now we go through all applications do:
         // 1. if possible swap the application to another slot

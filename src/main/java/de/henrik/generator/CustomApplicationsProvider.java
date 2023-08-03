@@ -56,6 +56,8 @@ public class CustomApplicationsProvider extends ApplicationsProvider {
     }
 
     private void newApp(int group, int topic, int prio) {
-        applicationsHashMap.add(new Application(groups.get(group), topics.get(topic), 1, prio));
+        var app = new Application(groups.get(group), topics.get(topic), 1, prio);
+        applicationsHashMap.add(app);
+        groups.get(group).applications().add(app);
     }
 }

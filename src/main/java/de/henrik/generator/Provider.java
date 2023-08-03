@@ -7,18 +7,25 @@ import de.henrik.data.Topic;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.AdjacencyListGraph;
 
 import java.util.*;
 
+import static de.henrik.Main.graph;
+
 public class Provider {
-    //    long seed = new Random().nextLong();
-    public static final int DATASET = 2;
-    long seed = 0;
+    long seed = new Random().nextLong();
+    public final int DATASET;
+//    long seed = 0;
     public CourseAndTopicProvider courseAndTopicProvider;
     public StudentAndGroupProvider studentAndGroupProvider;
     public ApplicationsProvider applicationsProvider;
 
-    public void fillGraph(Graph graph) {
+    public Provider(int dataset) {
+        DATASET = dataset;
+    }
+
+    public void fillGraph() {
         System.out.println("\n<--- COURSE AND TOPICS --->\n");
         courseAndTopicProvider = switch (DATASET) {
             case -1 -> new CustomCourseAndTopicProvider();
@@ -143,7 +150,6 @@ public class Provider {
         applicationsProvider.generate(studentAndGroupProvider.getGroupsBySize(), topicsMapping);
 
         applicationsProvider.getApplicationList().forEach(application -> {
-            System.out.println("Adding edge: " + application);
             graph.addEdge(application.toString(), application.topic().name(), application.group().toString(), false);
             Edge edge = graph.getEdge(application.toString());
             edge.setAttribute("data", application);
@@ -157,7 +163,7 @@ public class Provider {
             edge.setAttribute("ui.style", "fill-color: rgb(" + red + ", " + green + ", " + blue + "); z-index: -" + Math.abs(application.hashCode()) + ";");
         });
 
-        Util.repaintGraph(graph);
+        Util.repaintGraph();
 
         System.out.println("\n <--- GEN FINISHED ---> \n");
 //        courseAndTopicProvider.getTopicList().forEach(System.out::println);

@@ -1,56 +1,72 @@
 package de.henrik.algorithm;
 
-import de.henrik.generator.Provider;
-import org.graphstream.graph.Graph;
-
 import java.util.Random;
+
+import static de.henrik.Main.provider;
 
 
 public abstract class Algorithm implements Runnable {
 
-    boolean verbose = true;
+    protected static boolean verbose = false;
+    protected static boolean oneStep = false;
+    protected static boolean pause = false;
+    protected static boolean slow = true;
+    protected static int SLOW_TIME = 100;
+    private static Algorithm algorithm = null;
 
-
-    final Provider provider;
-    final Graph graph;
-    protected boolean oneStep = false;
-    protected boolean pause = false;
-    protected boolean slow = true;
-    public static final int SLOW_TIME = 100;
     Random random;
     Long seed;
 
-    private static boolean running = false;
-
-
-    protected Algorithm(long seed, Provider provider, Graph graph) {
+    protected Algorithm(long seed) {
         random = new Random(seed);
         this.seed = seed;
-        this.provider = provider;
-        this.graph = graph;
+    }
+
+    public static void step() {
+        Algorithm.pause = false;
+        Algorithm.oneStep = true;
+        if (algorithm != null) {
+            synchronized (algorithm) {
+                algorithm.notify();
+            }
+        }
+    }
+
+    public static synchronized void setSlow(boolean slow) {
+        Algorithm.slow = slow;
+    }
+
+    public static void setVerbose(boolean verbose) {
+        Algorithm.verbose = verbose;
+    }
+
+    public static void setSpeed(int value) {
+        Algorithm.SLOW_TIME = value;
     }
 
 
     @Override
     public void run() {
-        if (!running) {
-            running = true;
+        if (algorithm == null) {
+            Algorithm.algorithm = this;
             System.out.println("Clearing old Assignments");
             for (var topic : provider.courseAndTopicProvider.getTopicList()) {
                 topic.clearApplications();
             }
-            Util.repaintGraph(graph);
+            Util.repaintGraph();
             System.out.println("Starting Algorithm with seed " + seed + " slow " + slow + " verbose " + verbose);
             startAlgorithm();
             System.out.println("Algorithm finished");
-            Score.score(provider);
-            CheckErrors.check(provider);
-            running = false;
+            if (verbose) {
+                Score.score(provider);
+                CheckErrors.check(provider);
+            }
+            Algorithm.algorithm = null;
         }
     }
 
     public static boolean isRunning() {
-        return running;
+        return algorithm != null;
     }
 
     void checkPause() {
@@ -68,7 +84,6 @@ public abstract class Algorithm implements Runnable {
                 pause = true;
             }
             if (slow)
-
                 try {
                     wait(SLOW_TIME);
                 } catch (InterruptedException e) {
@@ -77,33 +92,16 @@ public abstract class Algorithm implements Runnable {
         }
     }
 
-    @SuppressWarnings("Duplicates")
     abstract void startAlgorithm();
 
-    public synchronized void pause() {
-        this.pause = true;
+    public static synchronized void pause() {
+        Algorithm.pause = true;
     }
 
-    public synchronized void resume() {
-        this.pause = false;
-        notify();
-    }
-
-
-    public synchronized void oneStep() {
-        oneStep = true;
-        notify();
-    }
-
-    public synchronized void setSlow(boolean visual) {
-        this.slow = visual;
-    }
-
-    public boolean isPaused() {
-        return pause;
-    }
-
-    public void setVerbose(boolean verbose) {
-        this.verbose = verbose;
+    public static synchronized void resume() {
+        Algorithm.pause = false;
+        synchronized (algorithm) {
+            algorithm.notify();
+        }
     }
 }

@@ -12,12 +12,12 @@ public record Application(Group group, Topic topic, int collectionID, int priori
 
     @Override
     public String toString() {
-        return "Application{" +
-                "group=" + group.toString() +
-                ", topic=" + topic.name() +
-                ", collectionID=" + collectionID +
-                ", priority=" + priority +
-                '}';
+        return "[Application: \n" +
+                "\tGroup: " + group.toString() + "\n" +
+                "\tCollectionID: " + collectionID + "\n" +
+                "\tPriority: " + priority + "\n" +
+                "\tTopic: " + topic.toString() + "\n" +
+                "]";
     }
 
     public boolean isAccepted() {

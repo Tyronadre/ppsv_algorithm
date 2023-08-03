@@ -1,6 +1,8 @@
 package de.henrik.algorithm;
 
 import de.henrik.data.*;
+import de.henrik.generator.Provider;
+import org.graphstream.graph.Graph;
 
 import java.util.*;
 
@@ -10,24 +12,24 @@ import static de.henrik.algorithm.Util.highlightElement;
 import static de.henrik.algorithm.Util.unhighlightElement;
 
 
-public class SingleOnly extends Algorithm {
+public class TTCGroups extends Algorithm {
 
     HighestPriorityAlgorithm highestPriorityAlgorithm;
-    public SingleOnly(long seed) {
+    public TTCGroups(long seed) {
         super(seed);
     }
 
     @Override
+    @SuppressWarnings("Duplicates")
     void startAlgorithm() {
         //do a highest priority first approach
         System.out.println("Starting Highest Priority Algorithm for initial assignment");
-        new HighestPriorityAlgorithm(seed).startAlgorithm();
-
+        highestPriorityAlgorithm = new HighestPriorityAlgorithm(seed);
+        highestPriorityAlgorithm.startAlgorithm();
         highestPriorityAlgorithm = null;
 
 
-        System.out.println("Starting Single Only Algorithm");
-        List<Topic> topics = provider.courseAndTopicProvider.getTopicList();
+        System.out.println("Starting TTC Only Algorithm");
         ConcurrentApplicationHashMap applicationHashMap = provider.applicationsProvider.getConcurrentApplicationHashMap();
 
         var groups = provider.studentAndGroupProvider.getGroupsBySize().get(1);
@@ -234,8 +236,5 @@ public class SingleOnly extends Algorithm {
         }
         return false;
     }
+
 }
-
-
-
-// TODO: 15.07.2023 COLLECTIONS

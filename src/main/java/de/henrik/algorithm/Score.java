@@ -8,6 +8,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.TreeMap;
 
+import static de.henrik.algorithm.Algorithm.verbose;
+
 public class Score {
     public static void score(Provider provider) {
         int score = 0;
@@ -48,13 +50,15 @@ public class Score {
                 if (slot.spaceLeft() > 0)
                     openSlots.add(new Tupel<>(topic, slot));
 
-        System.out.println(" // --- Score --- // \n (Prio 0 -> not accepted)");
+        System.out.println("\n\n // --- Score --- // \n (Prio 0 -> not accepted)");
         System.out.println("Score: " + score);
         acceptedApplicationsPrioMap.forEach((k, v) -> System.out.println("Prio " + k + " (Students/Groups): " + v.first() + "/" + v.second()));
-        System.out.println(" // --- Open Applications --- // ");
-        openApplications.forEach(a -> System.out.println(a.getGroupAndCollectionKey() + ": Apps: " + a.group().applications().toString()));
-        System.out.println(" // --- Open Slots --- // ");
-        openSlots.forEach(t -> System.out.println(t.first().name() + ": Slot " + t.second().ID() + "; " + t.second().spaceLeft() + "; minSize: " + t.second().slotSize().first()));
+        if (verbose) {
+            System.out.println(" // --- Open Applications --- // ");
+            openApplications.forEach(a -> System.out.println(a.getGroupAndCollectionKey() + ": Apps: " + a.group().applications().toString()));
+            System.out.println(" // --- Open Slots --- // ");
+            openSlots.forEach(t -> System.out.println(t.first().name() + ": Slot " + t.second().ID() + "; " + t.second().spaceLeft() + "; minSize: " + t.second().slotSize().first()));
+        }
 
     }
 }

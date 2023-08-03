@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import static de.henrik.Main.graph;
+import static de.henrik.Main.provider;
 import static de.henrik.algorithm.Util.highlightElement;
 
 
@@ -23,8 +25,8 @@ import static de.henrik.algorithm.Util.highlightElement;
 public class RandomIterationAlgorithm extends Algorithm {
 
 
-    public RandomIterationAlgorithm(long seed, Provider provider, Graph graph) {
-        super(seed, provider, graph);
+    public RandomIterationAlgorithm(long seed) {
+        super(seed);
     }
 
     @Override
@@ -108,7 +110,7 @@ public class RandomIterationAlgorithm extends Algorithm {
                         }
                     }
             }
-            Util.repaintGraph(graph);
+            Util.repaintGraph();
         }
     }
 }
