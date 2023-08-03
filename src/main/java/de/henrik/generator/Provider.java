@@ -150,8 +150,7 @@ public class Provider {
         applicationsProvider.generate(studentAndGroupProvider.getGroupsBySize(), topicsMapping);
 
         applicationsProvider.getApplicationList().forEach(application -> {
-            graph.addEdge(application.toString(), application.topic().name(), application.group().toString(), false);
-            Edge edge = graph.getEdge(application.toString());
+            var edge = graph.addEdge(application.name(), application.topic().name(), application.group().toString(), false);
             edge.setAttribute("data", application);
 
             double logProportion = 1 - Math.log10(application.priority()) / Math.log10(10);

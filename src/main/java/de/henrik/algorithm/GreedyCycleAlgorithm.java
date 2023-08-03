@@ -32,7 +32,7 @@ public class GreedyCycleAlgorithm extends Algorithm {
         var applicationByKeySortedByPriorityHashMapPointer = new TreeMap<Tupel<Group, Integer>, Integer>(Comparator.comparing(Tupel::hashCode));
         for (var application : applicationsHashMap.getApplicationList()) {
             applicationByKeySortedByPriorityHashMap.computeIfAbsent(application.getGroupAndCollectionKey(), k -> new ArrayList<>()).add(application);
-            applicationByKeySortedByPriorityHashMapPointer.computeIfAbsent(application.getGroupAndCollectionKey(), k -> 0);
+            applicationByKeySortedByPriorityHashMapPointer.putIfAbsent(application.getGroupAndCollectionKey(), 0);
         }
         for (var key : applicationByKeySortedByPriorityHashMap.keySet()) {
             applicationByKeySortedByPriorityHashMap.get(key).sort(Comparator.comparing(Application::priority));
@@ -42,7 +42,7 @@ public class GreedyCycleAlgorithm extends Algorithm {
         for (var key : applicationByKeySortedByPriorityHashMap.keySet()) {
             var application = applicationByKeySortedByPriorityHashMap.get(key).get(0);
             applicationByKeySortedByPriorityHashMapPointer.put(key, 1);
-            var edge = graph.getEdge(application.toString());
+            var edge = graph.getEdge(application.name());
             application.topic().acceptApplication(application,0);
             highlightElement(edge);
             checkPause();

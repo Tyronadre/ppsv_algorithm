@@ -61,7 +61,7 @@ public class SingleOnly extends Algorithm {
 
                         //PaintApplication we are looking at
                         if (verbose) System.out.println("Testing application " + application);
-                        if (slow) highlightElement(graph.getEdge(application.toString()));
+                        if (slow) highlightElement(graph.getEdge(application.name()));
                         checkPause();
 
                         var currentAppOfOtherGroup = application.topic().acceptedApplications().size() > 0 ? application.topic().acceptedApplications().get(0) : null;
@@ -189,7 +189,7 @@ public class SingleOnly extends Algorithm {
             var applicationOfCurrentGroup = currentGroup.getApplicationsFromCollection(collectionID).get(prioOfCurrentGroup);
             if (verbose)
                 System.out.println("1 Looking at: " + applicationOfCurrentGroup + " of group: " + currentGroup + " with currentPriority: " + currentPriority + " and maxPriority: " + maxPriority);
-            if (slow) highlightElement(graph.getEdge(applicationOfCurrentGroup.toString()));
+            if (slow) highlightElement(graph.getEdge(applicationOfCurrentGroup.name()));
             checkPause();
             // if there is space in the slot we accept it and also the original application we wanted to make space for
             if (applicationOfCurrentGroup.topic().testApplication(applicationOfCurrentGroup)) {
@@ -201,7 +201,7 @@ public class SingleOnly extends Algorithm {
                 return true;
             }
             //we couldnt swap so we paint the edge back to normal
-            if (slow) unhighlightElement(graph.getEdge(applicationOfCurrentGroup.toString()));
+            if (slow) unhighlightElement(graph.getEdge(applicationOfCurrentGroup.name()));
         }
         //we didnt have any empty spaces in this groups applications, so now we do recursion from top to bottom priority
         for (int prioOfCurrentGroup = currentGroupPrio == -1 ? 1 : currentGroupPrio; prioOfCurrentGroup + currentPriority + 1 < maxPriority && prioOfCurrentGroup < currentGroup.getApplicationsFromCollection(collectionID).size(); prioOfCurrentGroup++) {
@@ -209,7 +209,7 @@ public class SingleOnly extends Algorithm {
             if (verbose)
                 System.out.println("2 Looking at: " + applicationOfCurrentGroup + " of group: " + currentGroup + " with currentPriority: " + currentPriority + " and maxPriority: " + maxPriority);
 
-            if (slow) highlightElement(graph.getEdge(applicationOfCurrentGroup.toString()));
+            if (slow) highlightElement(graph.getEdge(applicationOfCurrentGroup.name()));
             checkPause();
             // do recursion with the next group
             // if this function returns true we know that the swap was successful and we can return true
@@ -223,7 +223,7 @@ public class SingleOnly extends Algorithm {
                 return true;
             }
             //we couldnt swap so we paint the edge back to normal
-            if (slow) unhighlightElement(graph.getEdge(applicationOfCurrentGroup.toString()));
+            if (slow) unhighlightElement(graph.getEdge(applicationOfCurrentGroup.name()));
             checkPause();
         }
         if (slow) {

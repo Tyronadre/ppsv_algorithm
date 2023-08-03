@@ -2,11 +2,11 @@ package de.henrik.algorithm;
 
 import de.henrik.Main;
 import de.henrik.data.Application;
+import de.henrik.data.IntegerTupel;
 import org.graphstream.graph.Element;
 import org.graphstream.graph.Graph;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Util {
 
@@ -62,6 +62,7 @@ public class Util {
 
     public static void highlightElement(Element element) {
         if (element == null) {
+            System.err.println("Didn't find element " + element);
             return;
         }
         addElementClass(element, "standout");
@@ -69,6 +70,7 @@ public class Util {
 
     public static void highlightElement2(Element element) {
         if (element == null) {
+            System.err.println("Didn't find element " + element);
             return;
         }
         addElementClass(element, "standout2");
@@ -94,5 +96,53 @@ public class Util {
             String newClasses = currentClasses.replace("standout2", "");
             element.setAttribute("ui.class", newClasses);
         }
+    }
+
+    public static List<Application> multiObjectiveKnapsack(List<Application> applications, int maxSize) {
+        int n = applications.size();
+        //FIRST -> SIZE; SECOND -> PRIORITY
+        applications.sort(Comparator.comparingInt(Application::size));
+        IntegerTupel[][] dp = new IntegerTupel[n + 1][maxSize + 1];
+        HashMap<IntegerTupel, List<Application>> selectedApplications = new HashMap<>();
+        for (int i = 0; i <= n; i++) {
+            for (int j = 0; j <= maxSize; j++) {
+                dp[i][j] = new IntegerTupel(0, 0);
+            }
+        }
+
+        Comparator<IntegerTupel> comparator = (o1, o2) -> {
+            if (!Objects.equals(o1.first(), o2.first())) {
+                return o1.first() - o2.first();
+            } else {
+                return o2.second() - o1.second();
+            }
+        };
+
+        for (int i = 1; i <= n; i++) {
+            Application app = applications.get(i - 1);
+
+            for (int j = 1; j <= maxSize; j++) {
+                if (app.size() > j) {
+                    //App passt nicht rein, also Wert von davor übernehmen falls wir einen haben
+                    dp[i][j] = dp[i - 1][j];
+                    selectedApplications.put(new IntegerTupel(i, j), new ArrayList<>(selectedApplications.getOrDefault(new IntegerTupel(i - 1, j), new ArrayList<>())));
+                } else {
+                    //App passt rein, also gucken ob sie besser ist als was wir davor hatten
+                    var newTupel = new IntegerTupel(dp[i - 1][j - app.size()].first() + app.size(), dp[i - 1][j - app.size()].second() + app.priority());
+                    if (comparator.compare(dp[i - 1][j], newTupel) > 0) {
+                        //Schlechter
+                        dp[i][j] = dp[i - 1][j];
+                        selectedApplications.put(new IntegerTupel(i, j), new ArrayList<>(selectedApplications.getOrDefault(new IntegerTupel(i - 1, j), new ArrayList<>())));
+                    } else {
+                        //Besser
+                        dp[i][j] = newTupel;
+                        selectedApplications.put(new IntegerTupel(i, j), new ArrayList<>(selectedApplications.getOrDefault(new IntegerTupel(i - 1, j - app.size()), new ArrayList<>())));
+                        selectedApplications.get(new IntegerTupel(i, j)).add(app);
+                    }
+
+                }
+            }
+        }
+        return selectedApplications.get(new IntegerTupel(n, maxSize));
     }
 }

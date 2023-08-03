@@ -51,7 +51,7 @@ public class RandomIterationAlgorithm extends Algorithm {
                     continue;
                 }
                 var possibleApplications = applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft());
-                possibleApplications.forEach(app -> highlightElement(graph.getEdge(app.toString())));
+                possibleApplications.forEach(app -> highlightElement(graph.getEdge(app.name())));
                 checkPause();
 
                 // we do single topics and group topics separately cause single topics are easier, and we have way more of them
@@ -63,7 +63,7 @@ public class RandomIterationAlgorithm extends Algorithm {
                     applicationHashMap.removeAllWithSameKey(app);
 
                     //Repaint the edge
-                    highlightElement(graph.getEdge(app.toString()));
+                    highlightElement(graph.getEdge(app.name()));
                     checkPause();
                 } else {
                     // if we do a group assignment we need to do it in the following way:
@@ -97,7 +97,7 @@ public class RandomIterationAlgorithm extends Algorithm {
                         acceptedApplications.add(app);
                         slot.acceptApplication(app);
                         applicationHashMap.removeAllWithSameKey(app);
-                        highlightElement(graph.getEdge(app.toString()));
+                        highlightElement(graph.getEdge(app.name()));
                         checkPause();
                     }
                 }

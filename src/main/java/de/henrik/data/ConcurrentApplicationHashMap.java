@@ -34,7 +34,7 @@ public class ConcurrentApplicationHashMap {
         if (byTopic.size() == 0 || !byTopic.containsKey(topic)) {
             return null;
         }
-        return byTopic.get(topic);
+        return new ArrayList<>(byTopic.get(topic));
     }
 
     public TreeMap<Tupel<Group, Integer>, List<Application>> getByKey() {
@@ -45,7 +45,7 @@ public class ConcurrentApplicationHashMap {
         if (byKey.size() == 0 || !byKey.containsKey(groupAndCollectionKey)) {
             return null;
         }
-        return byKey.get(groupAndCollectionKey);
+        return new ArrayList<>(byKey.get(groupAndCollectionKey));
     }
 
     public List<Application> getByTopicAndSize(Topic topic, int size) {

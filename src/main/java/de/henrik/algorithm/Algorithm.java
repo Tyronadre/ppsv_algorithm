@@ -1,5 +1,7 @@
 package de.henrik.algorithm;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import static de.henrik.Main.provider;
@@ -13,6 +15,7 @@ public abstract class Algorithm implements Runnable {
     protected static boolean slow = true;
     protected static int SLOW_TIME = 100;
     private static Algorithm algorithm = null;
+    private List<Runnable> onFinishListener = new ArrayList<>();
 
     Random random;
     Long seed;
@@ -61,6 +64,9 @@ public abstract class Algorithm implements Runnable {
                 Score.score(provider);
                 CheckErrors.check(provider);
             }
+            for (var listener : onFinishListener) {
+                listener.run();
+            }
             Algorithm.algorithm = null;
         }
     }
@@ -103,5 +109,9 @@ public abstract class Algorithm implements Runnable {
         synchronized (algorithm) {
             algorithm.notify();
         }
+    }
+
+    public void onFinish(Runnable r) {
+        onFinishListener.add(r);
     }
 }

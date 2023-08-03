@@ -70,6 +70,9 @@ public class Topic {
 
     /**
      * Checks if the given application can be accepted
+     * This will return true as long as there is enough space
+     * This will also return true if the minSize of this topic is not met
+     * This will also return true if the application is already accepted
      *
      * @param application the application to check
      * @return true if the application can be accepted, false otherwise
@@ -122,6 +125,21 @@ public class Topic {
 
     public List<Application> acceptedApplications() {
         return slots.stream().collect(ArrayList::new, (list, slot) -> list.addAll(slot.acceptedApplications()), ArrayList::addAll);
+    }
+
+    /**
+     * Returns the slot of the given application or null if the application is not accepted
+     *
+     * @param application the application to check
+     * @return the slot of the given application or null if the application is not accepted
+     */
+    public Slot getSlotOfApplication(Application application) {
+        for (var slot : slots) {
+            if (slot.applications.contains(application)) {
+                return slot;
+            }
+        }
+        return null;
     }
 
     public void clearApplications() {

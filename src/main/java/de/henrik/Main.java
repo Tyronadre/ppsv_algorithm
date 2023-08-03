@@ -6,12 +6,19 @@ import de.henrik.data.Topic;
 import de.henrik.generator.Provider;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.implementations.AdjacencyListGraph;
+import org.graphstream.ui.swing_viewer.SwingViewer;
+import org.graphstream.ui.swing_viewer.ViewPanel;
+import org.graphstream.ui.view.Viewer;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 public class Main {
     public static final String styleSheet = """
@@ -46,10 +53,34 @@ public class Main {
                 fill-color: rgb(240,0,0);
             }
             """;
+    private static final String PREFS_NODE_CONTROL = "de.henrik.control";
+    private static final String PREFS_NODE_GRAPH = "de.henrik.graph";
+    private static final String PREF_X = "x";
+    private static final String PREF_Y = "y";
+    private static final String PREF_WIDTH = "width";
+    private static final String PREF_HEIGHT = "height";
 
     public static int DATASET = -1;
     public static Graph graph = new AdjacencyListGraph("Graph");
     public static Provider provider = new Provider(DATASET);
+
+    //CONTROLS
+    private static final JButton hideCollection2 = new JButton("Hide Collection 2");
+    private static final JButton hideCollection3 = new JButton("Hide Collection 3");
+    private static final JButton hideCollection1 = new JButton("Hide Collection 1");
+    private static final JButton clear = new JButton("Clear");
+    private static final JButton checkErrors = new JButton("Check Errors");
+    private static final JButton score = new JButton("Score");
+    private static final JPanel dataSetSelection = new JPanel();
+    private static final JButton algo1 = createAlgorithmButton("RandomIterationAlgorithm", new RandomIterationAlgorithm(0L));
+    private static final JButton algo2 = createAlgorithmButton("HightestPriorityAlgorithm", new HighestPriorityAlgorithm(0L));
+    private static final JButton algo3 = createAlgorithmButton("GreedyCycleAlgorithm (WIP)", new GreedyCycleAlgorithm(0L));
+    private static final JButton algo4 = createAlgorithmButton("SingleTest (WIP)", new SingleOnly(0L));
+    private static final JButton algo5 = createAlgorithmButton("GroupTest (WIP)", new TTCGroups(0L));
+    private static final JButton algoPause = new JButton("Pause Algorithm");
+    private static final JButton algoStep = new JButton("Step Algorithm");
+    private static final JPanel algoSpeedPanel = new JPanel();
+    private static final JButton verbose = new JButton("Verbose");
 
     public static void main(String[] args) {
         System.out.println("Hello world!");
@@ -59,8 +90,23 @@ public class Main {
         graph.setAttribute("ui.stylesheet", styleSheet);
 
         // SETUP CONTROL PANEL
+        JFrame graphFrame = new JFrame("Graph");
+        var viewer = new SwingViewer(graph, SwingViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
+        viewer.addDefaultView(false);
+        ViewPanel viewPanel = (ViewPanel) viewer.getDefaultView();
+        graphFrame.add(viewPanel, BorderLayout.CENTER);
+
+
         JFrame frame = new JFrame("Control Panel");
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                saveWindowPositionAndSize(frame,graphFrame);
+                System.exit(0);
+            }
+        });
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        loadWindowPositionAndSize(frame,graphFrame);
         frame.setSize(600, 350);
         JPanel buttonPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
@@ -74,11 +120,52 @@ public class Main {
 
         frame.add(buttonPanel);
         frame.setVisible(true);
+        graphFrame.setVisible(true);
 
+        viewer.disableAutoLayout();
         provider.fillGraph();
 
-        var viewer = graph.display();
-        viewer.disableAutoLayout();
+    }
+
+    private static void loadWindowPositionAndSize(JFrame frame , JFrame graphFrame) {
+        Preferences prefs = Preferences.userRoot().node(PREFS_NODE_CONTROL);
+        int x = prefs.getInt(PREF_X, 100);
+        int y = prefs.getInt(PREF_Y, 100);
+        int width = prefs.getInt(PREF_WIDTH, 400);
+        int height = prefs.getInt(PREF_HEIGHT, 300);
+
+
+        frame.setLocation(x, y);
+        frame.setSize(width, height);
+
+        prefs = Preferences.userRoot().node(PREFS_NODE_GRAPH);
+        x = prefs.getInt(PREF_X, 100);
+        y = prefs.getInt(PREF_Y, 100);
+        width = prefs.getInt(PREF_WIDTH, 400);
+        height = prefs.getInt(PREF_HEIGHT, 300);
+
+        graphFrame.setLocation(x, y);
+        graphFrame.setSize(width, height);
+    }
+
+    private static void saveWindowPositionAndSize(JFrame frame, JFrame graphFrame) {
+        Preferences prefs = Preferences.userRoot().node(PREFS_NODE_CONTROL);
+        prefs.putInt(PREF_X, frame.getX());
+        prefs.putInt(PREF_Y, frame.getY());
+        prefs.putInt(PREF_WIDTH, frame.getWidth());
+        prefs.putInt(PREF_HEIGHT, frame.getHeight());
+
+        prefs = Preferences.userRoot().node(PREFS_NODE_GRAPH);
+        prefs.putInt(PREF_X, graphFrame.getX());
+        prefs.putInt(PREF_Y, graphFrame.getY());
+        prefs.putInt(PREF_WIDTH, graphFrame.getWidth());
+        prefs.putInt(PREF_HEIGHT, graphFrame.getHeight());
+
+        try {
+            prefs.flush();
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+        }
     }
 
     private static JButton createAlgorithmButton(String name, Algorithm algorithm) {
@@ -88,27 +175,19 @@ public class Main {
                 System.out.println("An algorithm is already running");
                 return;
             }
-            new Thread(algorithm).start();
+            dataSetSelection.setEnabled(false);
+            clear.setEnabled(false);
+            var t = new Thread(algorithm);
+            algorithm.onFinish(() -> {
+                dataSetSelection.setEnabled(true);
+                clear.setEnabled(true);
+            });
+            t.start();
         });
         return algo;
     }
 
     private static void createAlgorithmButtons(JPanel buttonPanel, GridBagConstraints c) {
-
-
-        //Algos
-        JButton algo1 = createAlgorithmButton("RandomIterationAlgorithm", new RandomIterationAlgorithm(0L));
-        JButton algo2 = createAlgorithmButton("HightestPriorityAlgorithm", new HighestPriorityAlgorithm(0L));
-        JButton algo3 = createAlgorithmButton("GreedyCycleAlgorithm (WIP)", new GreedyCycleAlgorithm(0L));
-        JButton algo4 = createAlgorithmButton("SingleTest (WIP)", new SingleOnly(0L));
-        JButton algo5 = createAlgorithmButton("GroupTest (WIP)", new TTCGroups(0L));
-
-        //Controls
-        JButton algoPause = new JButton("Pause Algorithm");
-        JButton algoStep = new JButton("Step Algorithm");
-        JPanel algoSpeedPanel = new JPanel();
-        JButton verbose = new JButton("Verbose");
-
         algoPause.addActionListener(e -> {
             if (Objects.equals(algoPause.getText(), "Pause Algorithm")) {
                 algoPause.setText("Resume Algorithm");
@@ -185,13 +264,7 @@ public class Main {
     }
 
     private static void createGeneralButtons(JPanel panel, GridBagConstraints constraints) {
-        JButton hideCollection1 = new JButton("Hide Collection 1");
-        JButton hideCollection2 = new JButton("Hide Collection 2");
-        JButton hideCollection3 = new JButton("Hide Collection 3");
-        JButton clear = new JButton("Clear");
-        JButton checkErrors = new JButton("Check Errors");
-        JButton score = new JButton("Score");
-        JPanel dataSetSelection = new JPanel();
+
 
 
         hideCollection1.addActionListener(e -> {
@@ -242,6 +315,11 @@ public class Main {
         dataSetSelection.add(dataSet);
         JButton loadSet = new JButton("Load Set");
         dataSetSelection.add(loadSet);
+        dataSetSelection.addPropertyChangeListener(e -> {
+            if (e.getPropertyName().equals("enabled")) {
+                loadSet.setEnabled((boolean) e.getNewValue());
+            }
+        });
         loadSet.addActionListener(e -> {
             int set;
             try {
