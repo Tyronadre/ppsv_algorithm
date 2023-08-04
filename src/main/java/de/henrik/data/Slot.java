@@ -49,6 +49,10 @@ public final class Slot {
         applications.remove(application);
     }
 
+    public void removeApplication(Group group) {
+        applications.removeIf(application -> application.group().equals(group));
+    }
+
     public List<Application> acceptedApplications() {
         return applications;
     }

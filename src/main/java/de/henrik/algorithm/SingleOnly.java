@@ -21,9 +21,9 @@ public class SingleOnly extends Algorithm {
     void startAlgorithm() {
         //do a highest priority first approach
         System.out.println("Starting Highest Priority Algorithm for initial assignment");
-        new HighestPriorityAlgorithm(seed).startAlgorithm();
+//        new HighestPriorityAlgorithm(seed).startAlgorithm();
 
-        highestPriorityAlgorithm = null;
+//        highestPriorityAlgorithm = null;
 
 
         System.out.println("Starting Single Only Algorithm");
@@ -89,7 +89,7 @@ public class SingleOnly extends Algorithm {
                                 else {
                                     applicationHashMap.removeAllWithSameKey(application);
                                 }
-                                System.out.println("Found better distribution for " + application);
+                                if (verbose) System.out.println("Found better distribution for " + application);
                                 break;
                             } else {
                                 if (verbose) System.out.println("swapGroups returned false");
@@ -104,7 +104,6 @@ public class SingleOnly extends Algorithm {
             }
             if (slow) Util.repaintGraph();
         } while (improvementMade);
-        Util.repaintGraph();
     }
 
     /**
@@ -152,7 +151,7 @@ public class SingleOnly extends Algorithm {
 
             // if we hit the first group that is on this path of the recursion we can do a circle swap
             if (initialApplication.getGroupAndCollectionKey().equals(currentGroupKey)) {
-                System.out.println("application = " + application + ", currentGroupKey = " + currentGroupKey + ", currentPriority = " + currentPriority + ", maxPriority = " + maxPriority + ", initialApplication = " + initialApplication + ", processedGroups = " + processedGroups);
+                if (verbose) System.out.println("application = " + application + ", currentGroupKey = " + currentGroupKey + ", currentPriority = " + currentPriority + ", maxPriority = " + maxPriority + ", initialApplication = " + initialApplication + ", processedGroups = " + processedGroups);
 //                if (verbose) System.out.println("Found better prio for group: " + currentGroupKey);
 //                //WHAT DO I WANT TO SWAP HERE. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 //                currentGroup.removeCurrentAcceptedApplication(collectionID);
@@ -200,7 +199,7 @@ public class SingleOnly extends Algorithm {
                 if (verbose) System.out.println("Swapped " + applicationOfCurrentGroup + " with " + application);
                 return true;
             }
-            //we couldnt swap so we paint the edge back to normal
+            // we couldn't swap so we paint the edge back to normal
             if (slow) unhighlightElement(graph.getEdge(applicationOfCurrentGroup.name()));
         }
         //we didnt have any empty spaces in this groups applications, so now we do recursion from top to bottom priority

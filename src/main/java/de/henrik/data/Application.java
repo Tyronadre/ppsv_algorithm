@@ -3,27 +3,29 @@ package de.henrik.data;
 import java.util.Objects;
 
 public final class Application {
-    private static int ID = 0;
+    private static int idCounter = 0;
     private final Group group;
     private final Topic topic;
     private final int collectionID;
     private final int priority;
-    private final int id;
+    private final int ID;
+    private final Tupel<Group,Integer> groupAndCollectionKey;
 
     protected Application(Group group, Topic topic, int collectionID, int priority, int id) {
         this.group = group;
         this.topic = topic;
         this.collectionID = collectionID;
         this.priority = priority;
-        this.id = id;
+        this.ID = id;
+        this.groupAndCollectionKey = new Tupel<>(group, collectionID);
     }
 
     public Application(Group group, Topic topic, int collectionID, int priority) {
-        this(group, topic, collectionID, priority, ID++);
+        this(group, topic, collectionID, priority, idCounter++);
     }
 
     public Tupel<Group, Integer> getGroupAndCollectionKey() {
-        return new Tupel<>(group, collectionID);
+        return groupAndCollectionKey;
     }
 
     public int size() {
@@ -42,7 +44,7 @@ public final class Application {
     }
 
     public String name() {
-        return "Application" + id;
+        return "Application" + ID;
     }
 
     public boolean isAccepted() {
@@ -74,7 +76,7 @@ public final class Application {
     }
 
     public int id() {
-        return id;
+        return ID;
     }
 
     @Override
@@ -82,16 +84,12 @@ public final class Application {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (Application) obj;
-        return Objects.equals(this.group, that.group) &&
-                Objects.equals(this.topic, that.topic) &&
-                this.collectionID == that.collectionID &&
-                this.priority == that.priority &&
-                this.id == that.id;
+        return this.ID == that.ID;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(group, topic, collectionID, priority, id);
+        return Objects.hash(group, topic, collectionID, priority, ID);
     }
 
 }

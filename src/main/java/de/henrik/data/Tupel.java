@@ -24,8 +24,7 @@ public class Tupel<T, U> {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (Tupel) obj;
-        return Objects.equals(this.first, that.first) &&
-                Objects.equals(this.second, that.second);
+        return this.first().equals(that.first) && this.second().equals(that.second);
     }
 
     @Override

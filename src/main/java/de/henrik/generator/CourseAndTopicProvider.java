@@ -25,7 +25,8 @@ public class CourseAndTopicProvider {
 
     /**
      * Bounds are INCLUDING
-     * @param seed the seed
+     *
+     * @param seed                         the seed
      * @param numberOfCourses
      * @param numberOfTopicsPerCourse
      * @param slotsOfTopic
@@ -64,6 +65,8 @@ public class CourseAndTopicProvider {
     }
 
     public void generate() {
+        System.out.println("Generating courses and topics:");
+        System.out.println("Number of courses: " + numberOfCourses + " Number of topics per course: " + numberOfTopicsPerCourse + " Number of group courses: " + numberOfGroupCourses + " Number of topics per group course: " + numberOfTopicsPerGroupCourse + " Max size of group topic: " + maxSizeOfGroupTopic);
         Random random = new Random(seed);
         courseList = new ArrayList<>();
         topicList = new ArrayList<>();
@@ -93,6 +96,7 @@ public class CourseAndTopicProvider {
                 topicList.add(topic);
             }
         }
+        System.out.println("Done!");
     }
 
 
@@ -101,5 +105,11 @@ public class CourseAndTopicProvider {
         for (Topic topic : topicList)
             result.computeIfAbsent(topic.slotSize().second(), k -> new ArrayList<>()).add(topic);
         return result;
+    }
+
+    public void clear() {
+        for (Topic topic : getTopicList()) {
+            topic.clearApplications();
+        }
     }
 }

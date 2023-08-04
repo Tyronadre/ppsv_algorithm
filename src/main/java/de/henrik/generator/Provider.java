@@ -39,6 +39,7 @@ public class Provider {
                     new CourseAndTopicProvider(seed, new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(5, 5), new IntegerTupel(5, 5), new IntegerTupel(1, 1), 5);
             case 4 ->
                     new CourseAndTopicProvider(seed, new IntegerTupel(20000, 20000), new IntegerTupel(5, 5), new IntegerTupel(1, 1), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), 0);
+            case 5 -> new CourseAndTopicProvider(seed, new IntegerTupel(1, 1), new IntegerTupel(10000, 10000), new IntegerTupel(1, 1), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), 0);
             default -> throw new IllegalStateException("Unexpected value: " + DATASET);
         };
 
@@ -64,6 +65,7 @@ public class Provider {
             case 3 -> new StudentAndGroupProvider(seed, 50, new TreeMap<>(Map.of(1, 50)));
             case 4 ->
                     new StudentAndGroupProvider(seed, 50000, new TreeMap<>(Map.of(1, 9000, 2, 5, 3, 5, 4, 10, 5, 20)));
+            case 5 -> new StudentAndGroupProvider(seed, 20000, new TreeMap<>(Map.of(1, 10000)));
             default -> throw new IllegalStateException("Unexpected value: " + DATASET);
         };
         studentAndGroupProvider.generate();
@@ -125,8 +127,16 @@ public class Provider {
             }
             case 4 -> {
                 numberOfCollections = 2;
-                Map<Integer, Integer> collectionSize1 = new TreeMap<>(Map.of(1, 200000));
-                Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 50000));
+                Map<Integer, Integer> collectionSize1 = new TreeMap<>(Map.of(1, 2000000));
+                Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 500000));
+                applicationDistribution.put(1, collectionSize1);
+                applicationDistribution.put(2, collectionSize2);
+                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
+            }
+            case 5 -> {
+                numberOfCollections = 2;
+                Map<Integer, Integer> collectionSize1 = new TreeMap<>(Map.of(1, 70000));
+                Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 1000));
                 applicationDistribution.put(1, collectionSize1);
                 applicationDistribution.put(2, collectionSize2);
                 applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
@@ -143,9 +153,6 @@ public class Provider {
                 topicsMapping.computeIfAbsent(j, key -> new ArrayList<>()).addAll(topicsByMaxSlotSize.get(k));
             }
         }
-
-        System.out.println("generating applications");
-
 
         applicationsProvider.generate(studentAndGroupProvider.getGroupsBySize(), topicsMapping);
 

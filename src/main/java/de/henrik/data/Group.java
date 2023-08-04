@@ -2,7 +2,17 @@ package de.henrik.data;
 
 import java.util.List;
 
-public record Group(List<Student> students, List<Application> applications) {
+public final class Group {
+    private static int idCounter = 0;
+    private final int ID;
+    private final List<Student> students;
+    private final List<Application> applications;
+
+    public Group(List<Student> students, List<Application> applications) {
+        this.students = students;
+        this.applications = applications;
+        ID = idCounter++;
+    }
 
     @Override
     public String toString() {
@@ -27,7 +37,7 @@ public record Group(List<Student> students, List<Application> applications) {
 
         Group group = (Group) o;
 
-        return students.equals(group.students);
+        return this.ID == group.ID;
     }
 
     public void removeCurrentAcceptedApplication(int collectionID) {
@@ -39,7 +49,6 @@ public record Group(List<Student> students, List<Application> applications) {
     }
 
     /**
-     * 
      * @param collectionID
      * @return
      */
@@ -53,7 +62,6 @@ public record Group(List<Student> students, List<Application> applications) {
     }
 
     /**
-     *
      * @param collectionID
      * @return the accepted application or null if there is none
      */
@@ -67,7 +75,6 @@ public record Group(List<Student> students, List<Application> applications) {
     }
 
     /**
-     *
      * @return the number of collections of this group or -1 if there is none
      */
     public int getCollectionSize() {
@@ -86,4 +93,13 @@ public record Group(List<Student> students, List<Application> applications) {
         }
         return null;
     }
+
+    public List<Student> students() {
+        return students;
+    }
+
+    public List<Application> applications() {
+        return applications;
+    }
+
 }

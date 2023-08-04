@@ -46,7 +46,7 @@ public class HighestPriorityAlgorithm extends Algorithm {
             for (Slot slot : topic.slots()) {
                 System.out.print("Progress " + String.format("%.2f", ((counter++ / maxCounter) * 100)) + "%           \r");
                 //check if we have topics and if yes get them and paint them else go to the next slot
-                if (applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft()) == null || applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft()).size() == 0) {
+                if (applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft()) == null || applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft()).isEmpty()) {
                     continue;
                 }
                 var possibleApplications = applicationHashMap.getByTopicAndUpToSize(topic, slot.spaceLeft());
@@ -76,7 +76,7 @@ public class HighestPriorityAlgorithm extends Algorithm {
                 }
                 checkPause();
             }
-            Util.repaintGraph();
+            if (slow) Util.repaintGraph();
         }
     }
 
