@@ -2,9 +2,7 @@ package de.henrik.algorithm;
 
 import de.henrik.data.*;
 
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static de.henrik.Main.graph;
 import static de.henrik.Main.provider;
@@ -50,13 +48,18 @@ public class TTCGroups extends Algorithm {
                     if (slow) highlightElement(graph.getNode(group.toString()));
                     checkPause();
 
+                    //if already perfect prio we can skip this collection
                     int currentPriority = group.getPriority(collectionID);
                     if (currentPriority == 1) {
                         continue;
                     }
                     if (verbose)
                         System.out.println("\nTrying to find a better application for" + group + " with current " + group.getAcceptedApplication(collectionID));
+
+                    // go through all applications of this group
+                    applicationsLoop:
                     for (Application application : group.getApplicationsFromCollection(collectionID)) {
+                        // if we didn't find any better assignment we stop
                         if (application.priority() == currentPriority) {
                             if (verbose)
                                 System.out.println("Did not find a better application for " + group + " in collection " + collectionID);
@@ -68,15 +71,17 @@ public class TTCGroups extends Algorithm {
                         if (slow) highlightElement(graph.getEdge(application.name()));
                         checkPause();
 
-                        Topic topic = application.topic();
-
-                        if (singleAssignment(application) || multiAssignment(application)) {
+                        // Test if we can assign this application directly because there is space, or we can do a multi assignment to this slot.
+                        if (singleAssignment(application) || multiAssignment(application, null)) {
                             applicationHashMap.removeAllWithSameKey(application);
                             improvementMade = true;
                             if (verbose)
                                 System.out.println("Found better assignment for " + group + " in collection " + collectionID);
                             break;
                         }
+
+
+                        Topic topic = application.topic();
 
                         // Now we have to do stuff with swapping.
                         // We filter all current applications of this topic for with which one we can swap to still get a valid assignment.
@@ -94,7 +99,7 @@ public class TTCGroups extends Algorithm {
                                     applicationHashMap.removeAllWithSameKey(application);
                                     applicationHashMap.removeAllWithSameKey(otherApplication);
                                 }
-                                break;
+                                break applicationsLoop;
                             }
                     }
                     if (slow) Util.repaintGraph();
@@ -107,32 +112,59 @@ public class TTCGroups extends Algorithm {
         Util.repaintGraph();
     }
 
-    private boolean multiAssignment(Application application) {
+    /**
+     * Tries to assign the application together with other not assigned applications to a slot with enough space.
+     *
+     * @param application           The application we want to assign
+     * @param forbiddenApplications Applications that will be ignored by this method
+     * @return true if we found a valid assignment, false otherwise
+     */
+    private boolean multiAssignment(Application application, List<Tupel<Group, Integer>> forbiddenApplications) {
         // Check if we can find enough unassigned applications that fit in this slot together with the current application
         // its a bit of a waste to compute this every time, but i want to do it step by step first
         var topic = application.topic();
+        if (slow) highlightElement(graph.getNode(topic.name()));
+        checkPause();
         var possibleApplications = applicationHashMap.getByTopic(topic);
         possibleApplications.remove(application);
-        boolean improvementMade = false;
+        if (forbiddenApplications != null)
+            possibleApplications.removeIf(application1 -> forbiddenApplications.contains(application1.getGroupAndCollectionKey()));
+        if (slow) possibleApplications.forEach(application1 -> highlightElement(graph.getEdge(application1.name())));
+        checkPause();
+
         for (var slotID : topic.possibleSlots(application)) {
             var currentParticipants = topic.slots().get(slotID).participants();
             var possibleApplicationsForSlot = multiObjectiveKnapsack(possibleApplications, topic.slotSize().second() - currentParticipants - application.size());
-            if (possibleApplicationsForSlot.size() > 0) {
+            if (!possibleApplicationsForSlot.isEmpty()) {
+                if (slow)
+                    possibleApplicationsForSlot.forEach(application1 -> highlightElement2(graph.getEdge(application1.name())));
+                checkPause();
+
                 application.topic().acceptApplication(application, slotID);
                 applicationHashMap.removeAllWithSameKey(application);
                 for (var app : possibleApplicationsForSlot) {
                     applicationHashMap.removeAllWithSameKey(app);
                     application.topic().acceptApplication(app, slotID);
                 }
-                improvementMade = true;
-                break;
+                return true;
             }
         }
-        return improvementMade;
+        if (slow) unhighlightElement(graph.getNode(topic.name()));
+        if (slow) possibleApplications.forEach(application1 -> unhighlightElement(graph.getEdge(application1.name())));
+        return false;
     }
 
+    /**
+     * Tries to assign the application to a slot.
+     *
+     * @param application the application to assign
+     * @return true if it was assigned, false if not
+     */
     private boolean singleAssignment(Application application) {
         var topic = application.topic();
+        if (slow) highlightElement(graph.getNode(topic.name()));
+        checkPause();
+
         // Check if we can assign this, because there is free space and we can fill minSize (i dont think this will ever happen)
         for (var slotID : topic.possibleSlots(application)) {
             var currentParticipants = topic.slots().get(slotID).participants();
@@ -142,6 +174,7 @@ public class TTCGroups extends Algorithm {
                 return true;
             }
         }
+        if (slow) unhighlightElement(graph.getNode(topic.name()));
         return false;
     }
 
@@ -219,17 +252,14 @@ public class TTCGroups extends Algorithm {
         // TODO: 03.08.2023 Check the priority stuff
         for (Application applicationOfCurrentGroup : currentGroup.getApplicationsFromCollection(collectionID)) {
             if (slow) highlightElement(graph.getEdge(applicationOfCurrentGroup.name()));
-            checkPause();
-            // we dont do -1 here because we dont want to look at the application with prio - 1 (this is the one that lead us here)
             if (verbose)
                 System.out.println("1 Looking at: " + applicationOfCurrentGroup + " of group: " + currentGroup + " with currentPriority: " + currentPriority + " and maxPriority: " + maxPriority);
-            if (slow) highlightElement(graph.getEdge(applicationOfCurrentGroup.name()));
             checkPause();
             // if there is space in the slot we accept it and also the original application we wanted to make space for
-            if (singleAssignment(application) || multiAssignment(application)) {
-                currentGroup.removeCurrentAcceptedApplication(collectionID);
-                applicationOfCurrentGroup.acceptApplication();
+            if (singleAssignment(applicationOfCurrentGroup) || multiAssignment(applicationOfCurrentGroup, new ArrayList<>(Collections.singleton(application.getGroupAndCollectionKey())))) {
+                application.topic().removeApplication(currentGroup);
                 application.group().removeCurrentAcceptedApplication(application.collectionID());
+                application.acceptApplication();
                 if (verbose) System.out.println("Swapped " + applicationOfCurrentGroup + " with " + application);
                 return true;
             }
@@ -268,4 +298,26 @@ public class TTCGroups extends Algorithm {
         return false;
     }
 
+
+    @Override
+    protected synchronized void stepInstance() {
+        if (highestPriorityAlgorithm != null) {
+            synchronized (highestPriorityAlgorithm) {
+                highestPriorityAlgorithm.notify();
+            }
+        } else {
+            super.stepInstance();
+        }
+    }
+
+    @Override
+    protected synchronized void resumeInstance() {
+        if (highestPriorityAlgorithm != null) {
+            synchronized (highestPriorityAlgorithm) {
+                highestPriorityAlgorithm.notify();
+            }
+        } else {
+            super.resumeInstance();
+        }
+    }
 }

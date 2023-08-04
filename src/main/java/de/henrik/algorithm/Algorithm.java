@@ -13,6 +13,7 @@ public abstract class Algorithm implements Runnable {
     protected static boolean oneStep = false;
     protected static boolean pause = false;
     protected static boolean slow = true;
+    protected static boolean cancel = false;
     protected static int SLOW_TIME = 100;
     private static Algorithm algorithm = null;
     private List<Runnable> onFinishListener = new ArrayList<>();
@@ -29,10 +30,34 @@ public abstract class Algorithm implements Runnable {
         Algorithm.pause = false;
         Algorithm.oneStep = true;
         if (algorithm != null) {
-            synchronized (algorithm) {
-                algorithm.notify();
-            }
+            algorithm.stepInstance();
         }
+    }
+
+    public static void cancel() {
+        if (algorithm != null) {
+            Algorithm.cancel = true;
+        }
+    }
+
+
+    protected synchronized void stepInstance() {
+        if (algorithm != null) algorithm.notify();
+    }
+
+    public static void resume() {
+        Algorithm.pause = false;
+        if (algorithm != null) {
+            algorithm.resumeInstance();
+        }
+    }
+
+    protected synchronized void resumeInstance() {
+        if (algorithm != null) algorithm.notify();
+    }
+
+    public static void pause() {
+        Algorithm.pause = true;
     }
 
     public static synchronized void setSlow(boolean slow) {
@@ -53,13 +78,12 @@ public abstract class Algorithm implements Runnable {
         if (algorithm == null) {
             Algorithm.algorithm = this;
             System.out.println("Clearing old Assignments");
-            for (var topic : provider.courseAndTopicProvider.getTopicList()) {
-                topic.clearApplications();
-            }
-            Util.repaintGraph();
+            Util.clear();
             System.out.println("Starting Algorithm with seed " + seed + " slow " + slow + " verbose " + verbose);
+            var time = System.currentTimeMillis();
             startAlgorithm();
-            System.out.println("Algorithm finished");
+            System.out.println("Algorithm finished in " + (System.currentTimeMillis() - time) + "ms");
+            Util.repaintGraph();
             if (verbose) {
                 Score.score(provider);
                 CheckErrors.check(provider);
@@ -77,6 +101,12 @@ public abstract class Algorithm implements Runnable {
 
     void checkPause() {
         synchronized (this) {
+            if (cancel) {
+                Algorithm.cancel = false;
+                Algorithm.algorithm = null;
+                Util.repaintGraph();
+                throw new RuntimeException("Algorithm canceled");
+            }
             while (pause && !oneStep) {
                 try {
                     wait(100);
@@ -89,27 +119,15 @@ public abstract class Algorithm implements Runnable {
                 oneStep = false;
                 pause = true;
             }
-            if (slow)
-                try {
-                    wait(SLOW_TIME);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+            if (slow) try {
+                wait(SLOW_TIME);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     abstract void startAlgorithm();
-
-    public static synchronized void pause() {
-        Algorithm.pause = true;
-    }
-
-    public static synchronized void resume() {
-        Algorithm.pause = false;
-        synchronized (algorithm) {
-            algorithm.notify();
-        }
-    }
 
     public void onFinish(Runnable r) {
         onFinishListener.add(r);

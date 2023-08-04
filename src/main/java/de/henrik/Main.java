@@ -2,20 +2,16 @@ package de.henrik;
 
 import de.henrik.algorithm.*;
 import de.henrik.data.Application;
-import de.henrik.data.Topic;
 import de.henrik.generator.Provider;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.implementations.AdjacencyListGraph;
 import org.graphstream.ui.swing_viewer.SwingViewer;
 import org.graphstream.ui.swing_viewer.ViewPanel;
-import org.graphstream.ui.view.Viewer;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -60,9 +56,9 @@ public class Main {
     private static final String PREF_WIDTH = "width";
     private static final String PREF_HEIGHT = "height";
 
-    public static int DATASET = -1;
+    public static int initialDataset = 5;
     public static Graph graph = new AdjacencyListGraph("Graph");
-    public static Provider provider = new Provider(DATASET);
+    public static Provider provider = new Provider(initialDataset);
 
     //CONTROLS
     private static final JButton hideCollection2 = new JButton("Hide Collection 2");
@@ -71,6 +67,8 @@ public class Main {
     private static final JButton clear = new JButton("Clear");
     private static final JButton checkErrors = new JButton("Check Errors");
     private static final JButton score = new JButton("Score");
+    private static final JButton cancelAlgo = new JButton("Force Stop Algorithm");
+    private static final JButton showGraph = new JButton("Hide Graph");
     private static final JPanel dataSetSelection = new JPanel();
     private static final JButton algo1 = createAlgorithmButton("RandomIterationAlgorithm", new RandomIterationAlgorithm(0L));
     private static final JButton algo2 = createAlgorithmButton("HightestPriorityAlgorithm", new HighestPriorityAlgorithm(0L));
@@ -82,6 +80,8 @@ public class Main {
     private static final JPanel algoSpeedPanel = new JPanel();
     private static final JButton verbose = new JButton("Verbose");
 
+    private static final JFrame graphFrame = new JFrame("Graph");
+
     public static void main(String[] args) {
         System.out.println("Hello world!");
         System.setProperty("org.graphstream.ui", "swing");
@@ -90,7 +90,6 @@ public class Main {
         graph.setAttribute("ui.stylesheet", styleSheet);
 
         // SETUP CONTROL PANEL
-        JFrame graphFrame = new JFrame("Graph");
         var viewer = new SwingViewer(graph, SwingViewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
         viewer.addDefaultView(false);
         ViewPanel viewPanel = (ViewPanel) viewer.getDefaultView();
@@ -264,9 +263,6 @@ public class Main {
     }
 
     private static void createGeneralButtons(JPanel panel, GridBagConstraints constraints) {
-
-
-
         hideCollection1.addActionListener(e -> {
             graph.edges().forEach(edge -> {
                 if (((Application) edge.getAttribute("data")).collectionID() == 1) {
@@ -301,17 +297,27 @@ public class Main {
             else hideCollection3.setText("Hide Collection 3");
         });
         clear.addActionListener(e -> {
-            for (Topic topic : provider.courseAndTopicProvider.getTopicList()) {
-                topic.clearApplications();
-            }
-            Util.repaintGraph();
-            provider.applicationsProvider.getApplicationList().forEach(System.out::println);
+            Util.clear();
         });
         checkErrors.addActionListener(e -> CheckErrors.check(provider));
         score.addActionListener(e -> Score.score(provider));
+        cancelAlgo.addActionListener(e -> {
+            Algorithm.cancel();
+            dataSetSelection.setEnabled(true);
+            clear.setEnabled(true);
+        });
+        showGraph.addActionListener(e -> {
+            if (showGraph.getText().equals("Show Graph")) {
+                showGraph.setText("Hide Graph");
+                graphFrame.setVisible(true);
+            } else {
+                showGraph.setText("Show Graph");
+                graphFrame.setVisible(false);
+            }
+        });
 
         dataSetSelection.setLayout(new BoxLayout(dataSetSelection, BoxLayout.X_AXIS));
-        JSpinner dataSet = new JSpinner(new SpinnerNumberModel(DATASET, -1, 4, 1));
+        JSpinner dataSet = new JSpinner(new SpinnerNumberModel(initialDataset, -1, 5, 1));
         dataSetSelection.add(dataSet);
         JButton loadSet = new JButton("Load Set");
         dataSetSelection.add(loadSet);
@@ -333,10 +339,14 @@ public class Main {
             graph.setAttribute("ui.quality");
             graph.setAttribute("ui.stylesheet", styleSheet);
 
+            //Clear console
+            System.out.println(new String(new char[50]).replace("\0", "\r\n"));
+            //load new set
             provider = new Provider(set);
             provider.fillGraph();
 
             Util.repaintGraph();
+
         });
 
         constraints.gridx = 0;
@@ -352,7 +362,11 @@ public class Main {
         panel.add(checkErrors, constraints);
         constraints.gridy++;
         panel.add(score, constraints);
-        constraints.gridy += 4;
+        constraints.gridy++;
+        panel.add(cancelAlgo, constraints);
+        constraints.gridy++;
+        panel.add(showGraph, constraints);
+        constraints.gridy += 2;
         panel.add(dataSetSelection, constraints);
     }
 }

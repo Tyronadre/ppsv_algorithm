@@ -52,7 +52,7 @@ public class CustomApplicationsProvider extends ApplicationsProvider {
         newApp(2,3,2);
         newApp(2, 1, 3);
 
-
+        applicationsList.addAll(applicationsHashMap.getApplicationList());
     }
 
     private void newApp(int group, int topic, int prio) {

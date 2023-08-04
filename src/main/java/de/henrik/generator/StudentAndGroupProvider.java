@@ -41,6 +41,9 @@ public class StudentAndGroupProvider {
     }
 
     public void generate() {
+        System.out.println("Generating students and groups:");
+        System.out.println("Student count: " + studentCount);
+        groupSizeToNumberOfStudents.forEach((groupSize, numberOfGroups) -> System.out.println("Group size: " + groupSize + " - Number of groups: " + numberOfGroups));
         studentList = new ArrayList<>();
         groupsBySize = new TreeMap<>();
         Random random = new Random(seed);

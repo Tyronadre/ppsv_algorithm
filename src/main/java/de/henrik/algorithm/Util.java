@@ -8,6 +8,8 @@ import org.graphstream.graph.Graph;
 
 import java.util.*;
 
+import static de.henrik.Main.provider;
+
 public class Util {
 
     public static <T> List<List<T>> generateDifferentPermutations(List<T> input) {
@@ -51,7 +53,7 @@ public class Util {
     }
 
     public static void addElementClass(Element element, String className) {
-        String currentClasses = element.getAttribute("ui.class",String.class);
+        String currentClasses = element.getAttribute("ui.class", String.class);
         if (currentClasses.length() == 0) {
             element.setAttribute("ui.class", className);
         } else if (!currentClasses.contains(className)) {
@@ -80,7 +82,7 @@ public class Util {
         if (element == null) {
             return;
         }
-        String currentClasses = element.getAttribute("ui.class",String.class);
+        String currentClasses = element.getAttribute("ui.class", String.class);
         if (currentClasses.contains("standout")) {
             String newClasses = currentClasses.replace("standout", "");
             element.setAttribute("ui.class", newClasses);
@@ -91,58 +93,78 @@ public class Util {
         if (element == null) {
             return;
         }
-        String currentClasses = element.getAttribute("ui.class",String.class);
+        String currentClasses = element.getAttribute("ui.class", String.class);
         if (currentClasses.contains("standout2")) {
             String newClasses = currentClasses.replace("standout2", "");
             element.setAttribute("ui.class", newClasses);
         }
     }
 
+    /**
+     * Finds the best combination of applications with two objectives: size and priority
+     *
+     * @param applications List of applications
+     * @param maxSize      Maximum size of the combination
+     * @return List of applications that have the best combination of size and priority
+     */
     public static List<Application> multiObjectiveKnapsack(List<Application> applications, int maxSize) {
-        int n = applications.size();
-        //FIRST -> SIZE; SECOND -> PRIORITY
+        if (applications.isEmpty() || maxSize <= 0) {
+            return new ArrayList<>();
+        }
+
         applications.sort(Comparator.comparingInt(Application::size));
-        IntegerTupel[][] dp = new IntegerTupel[n + 1][maxSize + 1];
-        HashMap<IntegerTupel, List<Application>> selectedApplications = new HashMap<>();
-        for (int i = 0; i <= n; i++) {
+
+        KnapsackResult[][] dp = new KnapsackResult[applications.size() + 1][maxSize + 1];
+        for (int i = 0; i <= applications.size(); i++) {
             for (int j = 0; j <= maxSize; j++) {
-                dp[i][j] = new IntegerTupel(0, 0);
+                dp[i][j] = new KnapsackResult(0, 0);
             }
         }
 
-        Comparator<IntegerTupel> comparator = (o1, o2) -> {
-            if (!Objects.equals(o1.first(), o2.first())) {
-                return o1.first() - o2.first();
-            } else {
-                return o2.second() - o1.second();
-            }
-        };
-
-        for (int i = 1; i <= n; i++) {
+        for (int i = 1; i <= applications.size(); i++) {
             Application app = applications.get(i - 1);
 
             for (int j = 1; j <= maxSize; j++) {
                 if (app.size() > j) {
-                    //App passt nicht rein, also Wert von davor übernehmen falls wir einen haben
                     dp[i][j] = dp[i - 1][j];
-                    selectedApplications.put(new IntegerTupel(i, j), new ArrayList<>(selectedApplications.getOrDefault(new IntegerTupel(i - 1, j), new ArrayList<>())));
                 } else {
-                    //App passt rein, also gucken ob sie besser ist als was wir davor hatten
-                    var newTupel = new IntegerTupel(dp[i - 1][j - app.size()].first() + app.size(), dp[i - 1][j - app.size()].second() + app.priority());
-                    if (comparator.compare(dp[i - 1][j], newTupel) > 0) {
-                        //Schlechter
-                        dp[i][j] = dp[i - 1][j];
-                        selectedApplications.put(new IntegerTupel(i, j), new ArrayList<>(selectedApplications.getOrDefault(new IntegerTupel(i - 1, j), new ArrayList<>())));
-                    } else {
-                        //Besser
-                        dp[i][j] = newTupel;
-                        selectedApplications.put(new IntegerTupel(i, j), new ArrayList<>(selectedApplications.getOrDefault(new IntegerTupel(i - 1, j - app.size()), new ArrayList<>())));
-                        selectedApplications.get(new IntegerTupel(i, j)).add(app);
-                    }
+                    KnapsackResult withoutApp = dp[i - 1][j];
+                    KnapsackResult withApp = new KnapsackResult(dp[i - 1][j - app.size()].size + app.size(), dp[i - 1][j - app.size()].priority + app.priority());
 
+                    dp[i][j] = (withoutApp.compareTo(withApp) > 0) ? withoutApp : withApp;
                 }
             }
         }
-        return selectedApplications.get(new IntegerTupel(n, maxSize));
+
+        List<Application> selectedApplications = new ArrayList<>();
+        int i = applications.size();
+        int j = maxSize;
+
+        while (i > 0 && j > 0) {
+            if (!dp[i][j].equals(dp[i - 1][j])) {
+                selectedApplications.add(applications.get(i - 1));
+                j -= applications.get(i - 1).size();
+            }
+            i--;
+        }
+
+        return selectedApplications;
+    }
+
+    private record KnapsackResult(int size, int priority) implements Comparable<KnapsackResult> {
+        @Override
+        public int compareTo(KnapsackResult other) {
+            if (this.size != other.size) {
+                return this.size - other.size;
+            } else {
+                return other.priority - this.priority;
+            }
+        }
+    }
+
+    public static void clear() {
+        provider.courseAndTopicProvider.clear();
+        provider.applicationsProvider.clear();
+        repaintGraph();
     }
 }

@@ -10,6 +10,8 @@ public class Topic {
     private final IntegerTupel slotSize;
 
     private final List<Slot> slots = new ArrayList<>();
+    private static int idCounter = 0;
+    private final int ID = idCounter++;
 
     public Topic(String name, Course course, IntegerTupel slotSize, int slots) {
         this.name = name;
@@ -41,7 +43,7 @@ public class Topic {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (Topic) obj;
-        return Objects.equals(this.name, that.name) && Objects.equals(this.course, that.course) && Objects.equals(this.slotSize, that.slotSize);
+        return this.ID == that.ID;
     }
 
     @Override
@@ -124,8 +126,13 @@ public class Topic {
     }
 
     public List<Application> acceptedApplications() {
-        return slots.stream().collect(ArrayList::new, (list, slot) -> list.addAll(slot.acceptedApplications()), ArrayList::addAll);
+        List<Application> acceptedApplications = new ArrayList<>();
+        for (Slot slot : slots) {
+            acceptedApplications.addAll(slot.acceptedApplications());
+        }
+        return acceptedApplications;
     }
+
 
     /**
      * Returns the slot of the given application or null if the application is not accepted
@@ -148,5 +155,9 @@ public class Topic {
 
     public void removeApplication(Application currentAppOfGroup) {
         slots.forEach(slot -> slot.removeApplication(currentAppOfGroup));
+    }
+
+    public void removeApplication(Group group) {
+        slots.forEach(slot -> slot.removeApplication(group));
     }
 }

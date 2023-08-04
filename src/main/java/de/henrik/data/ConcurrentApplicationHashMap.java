@@ -7,9 +7,15 @@ import java.util.TreeMap;
 
 public class ConcurrentApplicationHashMap {
 
-    TreeMap<Integer, List<Application>> bySize = new TreeMap<>();
-    TreeMap<Topic, List<Application>> byTopic = new TreeMap<>(Comparator.comparing(Topic::name));
-    TreeMap<Tupel<Group, Integer>, List<Application>> byKey = new TreeMap<>(Comparator.comparing(Tupel::hashCode));
+    TreeMap<Integer, List<Application>> bySize ;
+    TreeMap<Topic, List<Application>> byTopic ;
+    TreeMap<Tupel<Group, Integer>, List<Application>> byKey ;
+
+    public ConcurrentApplicationHashMap() {
+        byKey = new TreeMap<>(Comparator.comparing(Tupel::hashCode));
+        bySize = new TreeMap<>();
+        byTopic = new TreeMap<>(Comparator.comparing(Topic::name));
+    }
 
     public List<Application> getBySize(int size) {
         if (!bySize.containsKey(size)) {
@@ -90,9 +96,9 @@ public class ConcurrentApplicationHashMap {
      * @param application the application to remove
      */
     public void removeAllWithSameKey(Application application) {
-        bySize.values().forEach(applications -> applications.removeIf(application1 -> application.getGroupAndCollectionKey().equals(application1.getGroupAndCollectionKey())));
-        byTopic.values().forEach(applications -> applications.removeIf(application1 -> application.getGroupAndCollectionKey().equals(application1.getGroupAndCollectionKey())));
-        byKey.values().forEach(applications -> applications.removeIf(application1 -> application.getGroupAndCollectionKey().equals(application1.getGroupAndCollectionKey())));
+        bySize.get(application.size()).removeIf(application::equals);
+        byTopic.get(application.topic()).removeIf(application::equals);
+        byKey.get(application.getGroupAndCollectionKey()).removeIf(application::equals);
     }
 
     public void add(Application application) {
