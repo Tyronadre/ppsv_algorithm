@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Objects;
+import java.util.Random;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -70,11 +71,11 @@ public class Main {
     private static final JButton cancelAlgo = new JButton("Force Stop Algorithm");
     private static final JButton showGraph = new JButton("Hide Graph");
     private static final JPanel dataSetSelection = new JPanel();
-    private static final JButton algo1 = createAlgorithmButton("RandomIterationAlgorithm", new RandomIterationAlgorithm(0L));
-    private static final JButton algo2 = createAlgorithmButton("HightestPriorityAlgorithm", new HighestPriorityAlgorithm(0L));
-    private static final JButton algo3 = createAlgorithmButton("GreedyCycleAlgorithm (WIP)", new GreedyCycleAlgorithm(0L));
-    private static final JButton algo4 = createAlgorithmButton("SingleTest (WIP)", new SingleOnly(0L));
-    private static final JButton algo5 = createAlgorithmButton("GroupTest (WIP)", new TTCGroups(0L));
+    private static final JButton algo1 = createAlgorithmButton("RandomIterationAlgorithm", new RandomIterationAlgorithm(new Random().nextLong()));
+    private static final JButton algo2 = createAlgorithmButton("HightestPriorityAlgorithm", new HighestPriorityAlgorithm(new Random().nextLong()));
+    private static final JButton algo3 = createAlgorithmButton("GreedyCycleAlgorithm (WIP)", new GreedyCycleAlgorithm(new Random().nextLong()));
+    private static final JButton algo4 = createAlgorithmButton("SingleTest (WIP)", new SingleOnly(new Random().nextLong()));
+    private static final JButton algo5 = createAlgorithmButton("GroupTest (WIP)", new TTCGroups(new Random().nextLong()));
     private static final JButton algoPause = new JButton("Pause Algorithm");
     private static final JButton algoStep = new JButton("Step Algorithm");
     private static final JPanel algoSpeedPanel = new JPanel();
