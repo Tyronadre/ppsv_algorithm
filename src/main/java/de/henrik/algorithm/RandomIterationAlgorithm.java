@@ -87,7 +87,7 @@ public class RandomIterationAlgorithm extends Algorithm {
                     }
                     possibleCombinations.removeAll(combinationsToRemove);
                     // if we have no possible combinations we go to the next slot
-                    if (possibleCombinations.size() == 0) {
+                    if (possibleCombinations.isEmpty()) {
                         continue;
                     }
 

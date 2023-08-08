@@ -1,16 +1,23 @@
 package de.henrik.data;
 
 import java.util.List;
+import java.util.TreeSet;
 
 public final class Group {
     private static int idCounter = 0;
     private final int ID;
     private final List<Student> students;
-    private final List<Application> applications;
+    private final TreeSet<Application> applications;
 
-    public Group(List<Student> students, List<Application> applications) {
+    public Group(List<Student> students) {
         this.students = students;
-        this.applications = applications;
+        this.applications = new TreeSet<>((o1, o2) -> {
+            if (o1.priority() == o2.priority()) {
+                return o1.collectionID() - o2.collectionID();
+            } else {
+                return o1.priority() - o2.priority();
+            }
+        });
         ID = idCounter++;
     }
 
@@ -98,7 +105,7 @@ public final class Group {
         return students;
     }
 
-    public List<Application> applications() {
+    public TreeSet<Application> applications() {
         return applications;
     }
 

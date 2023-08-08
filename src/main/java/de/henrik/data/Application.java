@@ -8,21 +8,17 @@ public final class Application {
     private final Topic topic;
     private final int collectionID;
     private final int priority;
-    private final int ID;
+    private final int ID = idCounter++;
     private final Tupel<Group,Integer> groupAndCollectionKey;
 
-    protected Application(Group group, Topic topic, int collectionID, int priority, int id) {
+    public Application(Group group, Topic topic, int collectionID, int priority) {
         this.group = group;
         this.topic = topic;
         this.collectionID = collectionID;
         this.priority = priority;
-        this.ID = id;
         this.groupAndCollectionKey = new Tupel<>(group, collectionID);
     }
 
-    public Application(Group group, Topic topic, int collectionID, int priority) {
-        this(group, topic, collectionID, priority, idCounter++);
-    }
 
     public Tupel<Group, Integer> getGroupAndCollectionKey() {
         return groupAndCollectionKey;

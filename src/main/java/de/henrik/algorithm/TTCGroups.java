@@ -12,20 +12,18 @@ import static de.henrik.algorithm.Util.*;
 public class TTCGroups extends Algorithm {
 
     private ConcurrentApplicationHashMap applicationHashMap;
-    HighestPriorityAlgorithm highestPriorityAlgorithm;
 
     public TTCGroups(long seed) {
         super(seed);
     }
+
+    public static HashMap<Integer, Integer> depthHits = new HashMap<>();
 
     @Override
     @SuppressWarnings("Duplicates")
     void startAlgorithm() {
         //do a highest priority first approach
         System.out.println("Starting Highest Priority Algorithm for initial assignment");
-        highestPriorityAlgorithm = new HighestPriorityAlgorithm(seed);
-        highestPriorityAlgorithm.startAlgorithm();
-        highestPriorityAlgorithm = null;
         applicationHashMap = provider.applicationsProvider.getConcurrentApplicationHashMap();
 
 
@@ -91,7 +89,7 @@ public class TTCGroups extends Algorithm {
                             return slot.participants() - application1.size() + application.size() >= topic.slotSize().first() && slot.participants() - application1.size() + application.size() <= topic.slotSize().second();
                         }).sorted(Comparator.comparingInt(Application::size)).toList();
                         for (var otherApplication : otherApplications)
-                            if (swapGroups(application, otherApplication.getGroupAndCollectionKey(), 0, currentPriority == -1 ? 1000 : currentPriority, application, new HashSet<>())) {
+                            if (swapGroups(application, otherApplication.getGroupAndCollectionKey(), 0, currentPriority == -1 ? 1000 : currentPriority, application, new HashSet<>(),0)) {
                                 improvementMade = true;
                                 if (currentPriority != -1)
                                     group.getApplicationsFromCollection(collectionID).get(currentPriority - 1).removeApplication();
@@ -189,8 +187,8 @@ public class TTCGroups extends Algorithm {
      * @return true if a valid swap is found and performed, false otherwise
      */
     @SuppressWarnings("Duplicates")
-    private boolean swapGroups(Application application, Tupel<Group, Integer> currentGroupKey, int currentPriority, int maxPriority, Application initialApplication, Set<Tupel<Group, Integer>> processedGroups) {
-        // TODO: 17.07.2023 i think we can vastly optimize this if we save the groups that cannot improve in this iteration, and dont look at them again. if we make any changes we delete the affected groups from this set.
+    private boolean swapGroups(Application application, Tupel<Group, Integer> currentGroupKey, int currentPriority, int maxPriority, Application initialApplication, Set<Tupel<Group, Integer>> processedGroups, int depth) {
+        // TODO: 17.07.2023 i think we can vastly optimize this if we save the groups that cannot improve in this iteration, and dont look at them again.
 
         if (verbose)
             System.out.println("Swap called with application" + application + " currentGroup: " + currentGroupKey.toString() + " currentPriority: " + currentPriority + " maxPriority: " + maxPriority + " groupsLookedAt" + processedGroups.size());
@@ -208,6 +206,12 @@ public class TTCGroups extends Algorithm {
         }
         checkPause();
 
+
+        var currentGroupPrio = currentGroup.getPriority(collectionID);
+        var p = currentGroupPrio == -1 ? 1000 : currentGroupPrio;
+        maxPriority += p;
+        currentPriority += application.priority();
+
         if (processedGroups.contains(currentGroupKey)) {
             // This group has already been processed, and there was apparently no better distribution, so we break the recursion here.
 
@@ -215,39 +219,29 @@ public class TTCGroups extends Algorithm {
 
             // if we hit the first group that is on this path of the recursion we can do a circle swap
             if (initialApplication.getGroupAndCollectionKey().equals(currentGroupKey)) {
-                System.out.println("application = " + application + ", currentGroupKey = " + currentGroupKey + ", currentPriority = " + currentPriority + ", maxPriority = " + maxPriority + ", initialApplication = " + initialApplication + ", processedGroups = " + processedGroups);
-//                if (verbose) System.out.println("Found better prio for group: " + currentGroupKey);
-//                //WHAT DO I WANT TO SWAP HERE. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-//                currentGroup.removeCurrentAcceptedApplication(collectionID);
-//                application.acceptApplication();
-//                return true;
-//                var applicationsOfCurrentCroup = currentGroup.getApplicationsFromCollection(collectionID);
-//            applicationsOfCurrentCroup.stream().filter(application1 -> application1.topic())
-//            if (currentGroup.getCurrentAcceptedApplication(collectionID) != null && currentPriority + currentGroup.getApplicationsFromCollection(collectionID) < maxPriority) {
-//                if (verbose)
-//                    System.out.println("Found better prio for group: " + currentGroupKey);
-//                //WHAT DO I WANT TO SWAP HERE. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-//                currentGroup.removeCurrentAcceptedApplication(collectionID);
-//                applicationOfCurrentGroup.acceptApplication();
-//                application.group().removeCurrentAcceptedApplication(application.collectionID());
-//                application.acceptApplication();
-//                return true;
-//            }
+                if (maxPriority > currentPriority) {
+                    System.out.println("Found circle swap");
+                    if (verbose) System.out.println("Found better prio for group: " + currentGroupKey);
+                    currentGroup.removeCurrentAcceptedApplication(collectionID);
+                    application.group().removeCurrentAcceptedApplication(application.collectionID());
+                    application.acceptApplication();
+
+                    saveDepth(depth);
+                    return true;
+                }
+                if (verbose)
+                    System.out.println("max depth: \napplication = " + application + ", currentGroupKey = " + currentGroupKey + ", currentPriority = " + currentPriority + ", maxPriority = " + maxPriority + ", initialApplication = " + initialApplication + ", numberOfProcessedGroups = " + processedGroups.size());
             }
 
+            saveDepth(depth);
             return false;
         }
         processedGroups.add(currentGroupKey);
-        var currentGroupPrio = currentGroup.getPriority(collectionID);
-        var p = currentGroupPrio == -1 ? 1000 : currentGroupPrio;
-        maxPriority += p;
-        currentPriority += p;
         // Iterate over all prios of the other group that are still possible
         // we dont look at prios that are to high
         // first we only look for empty spaces
         if (verbose)
             System.out.println("Looking at group: " + currentGroup + " with currentPriority: " + currentPriority + " and maxPriority: " + maxPriority);
-
         //go over all the applications of the other group.
         // TODO: 03.08.2023 Check the priority stuff
         for (Application applicationOfCurrentGroup : currentGroup.getApplicationsFromCollection(collectionID)) {
@@ -298,26 +292,8 @@ public class TTCGroups extends Algorithm {
         return false;
     }
 
-
-    @Override
-    protected synchronized void stepInstance() {
-        if (highestPriorityAlgorithm != null) {
-            synchronized (highestPriorityAlgorithm) {
-                highestPriorityAlgorithm.notify();
-            }
-        } else {
-            super.stepInstance();
-        }
-    }
-
-    @Override
-    protected synchronized void resumeInstance() {
-        if (highestPriorityAlgorithm != null) {
-            synchronized (highestPriorityAlgorithm) {
-                highestPriorityAlgorithm.notify();
-            }
-        } else {
-            super.resumeInstance();
-        }
+    private void saveDepth(int depth) {
+        depthHits.putIfAbsent(depth, 1);
+        depthHits.computeIfPresent(depth, (k, v) -> v + 1);
     }
 }

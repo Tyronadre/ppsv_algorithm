@@ -3,19 +3,17 @@ package de.henrik.generator;
 import de.henrik.data.Application;
 import de.henrik.data.Group;
 import de.henrik.data.Topic;
-import scala.App;
 
 import java.util.List;
 import java.util.Map;
 
-public class CustomApplicationsProvider extends ApplicationsProvider {
+public class CustomApplicationProvider extends ApplicationsProvider {
     List<Group> groups;
     List<Topic> topics;
 
 
-
-    public CustomApplicationsProvider() {
-        super(0, null);
+    public CustomApplicationProvider() {
+        super(0, null, false);
     }
 
     @Override
@@ -55,9 +53,10 @@ public class CustomApplicationsProvider extends ApplicationsProvider {
         applicationsList.addAll(applicationsHashMap.getApplicationList());
     }
 
-    private void newApp(int group, int topic, int prio) {
+    private Application newApp(int group, int topic, int prio) {
         var app = new Application(groups.get(group), topics.get(topic), 1, prio);
         applicationsHashMap.add(app);
         groups.get(group).applications().add(app);
+        return app;
     }
 }

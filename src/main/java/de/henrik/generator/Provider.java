@@ -4,19 +4,16 @@ import de.henrik.algorithm.Util;
 import de.henrik.data.Group;
 import de.henrik.data.IntegerTupel;
 import de.henrik.data.Topic;
-import org.graphstream.graph.Edge;
-import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
-import org.graphstream.graph.implementations.AdjacencyListGraph;
 
 import java.util.*;
 
 import static de.henrik.Main.graph;
 
 public class Provider {
-    long seed = new Random().nextLong();
+    //    long seed = new Random().nextLong();
     public final int DATASET;
-//    long seed = 0;
+    long seed = 0;
     public CourseAndTopicProvider courseAndTopicProvider;
     public StudentAndGroupProvider studentAndGroupProvider;
     public ApplicationsProvider applicationsProvider;
@@ -28,18 +25,20 @@ public class Provider {
     public void fillGraph() {
         System.out.println("\n<--- COURSE AND TOPICS --->\n");
         courseAndTopicProvider = switch (DATASET) {
+            case -2 -> new CustomCourseAndTopicProvider2();
             case -1 -> new CustomCourseAndTopicProvider();
             case 0 ->
                     new CourseAndTopicProvider(seed, new IntegerTupel(170, 180), new IntegerTupel(3, 6), new IntegerTupel(20, 30), new IntegerTupel(4, 5), new IntegerTupel(3, 5), new IntegerTupel(2, 3), 5);
             case 1 ->
                     new CourseAndTopicProvider(seed, new IntegerTupel(10, 10), new IntegerTupel(4, 4), new IntegerTupel(1, 1), new IntegerTupel(4, 4), new IntegerTupel(3, 3), new IntegerTupel(2, 2), 5);
             case 2 ->
-                    new CourseAndTopicProvider(seed, new IntegerTupel(15, 15), new IntegerTupel(4, 4), new IntegerTupel(1, 1), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), 0);
+                    new CourseAndTopicProvider(seed, new IntegerTupel(20, 20), new IntegerTupel(4, 4), new IntegerTupel(1, 1), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), 0);
             case 3 ->
                     new CourseAndTopicProvider(seed, new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(5, 5), new IntegerTupel(5, 5), new IntegerTupel(1, 1), 5);
             case 4 ->
                     new CourseAndTopicProvider(seed, new IntegerTupel(20000, 20000), new IntegerTupel(5, 5), new IntegerTupel(1, 1), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), 0);
-            case 5 -> new CourseAndTopicProvider(seed, new IntegerTupel(1, 1), new IntegerTupel(10000, 10000), new IntegerTupel(1, 1), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), 0);
+            case 5 ->
+                    new CourseAndTopicProvider(seed, new IntegerTupel(2, 2), new IntegerTupel(100000, 100000), new IntegerTupel(1, 1), new IntegerTupel(0, 0), new IntegerTupel(0, 0), new IntegerTupel(0, 0), 0);
             default -> throw new IllegalStateException("Unexpected value: " + DATASET);
         };
 
@@ -58,6 +57,7 @@ public class Provider {
 
         System.out.println("\n<--- STUDENT AND GROUPS --->\n");
         studentAndGroupProvider = switch (DATASET) {
+            case -2 -> new CustomStudentAndGroupProvider2();
             case -1 -> new CustomStudentAndGroupProvider();
             case 0 -> new StudentAndGroupProvider(seed, 1000, new TreeMap<>(Map.of(1, 900, 2, 5, 3, 5, 4, 10, 5, 20)));
             case 1 -> new StudentAndGroupProvider(seed, 50, new TreeMap<>(Map.of(1, 30, 2, 1, 3, 1, 4, 2, 5, 3)));
@@ -65,7 +65,7 @@ public class Provider {
             case 3 -> new StudentAndGroupProvider(seed, 50, new TreeMap<>(Map.of(1, 50)));
             case 4 ->
                     new StudentAndGroupProvider(seed, 50000, new TreeMap<>(Map.of(1, 9000, 2, 5, 3, 5, 4, 10, 5, 20)));
-            case 5 -> new StudentAndGroupProvider(seed, 20000, new TreeMap<>(Map.of(1, 10000)));
+            case 5 -> new SingleStudentAndGroupProvider(100000);
             default -> throw new IllegalStateException("Unexpected value: " + DATASET);
         };
         studentAndGroupProvider.generate();
@@ -87,9 +87,13 @@ public class Provider {
         Map<Integer, Map<Integer, Integer>> applicationDistribution = new TreeMap<>();
         int numberOfCollections;
         switch (DATASET) {
+            case -2 -> {
+                numberOfCollections = 1;
+                applicationsProvider = new CustomApplicationProvider2();
+            }
             case -1 -> {
                 numberOfCollections = 1;
-                applicationsProvider = new CustomApplicationsProvider();
+                applicationsProvider = new CustomApplicationProvider();
             }
             case 0 -> {
                 numberOfCollections = 3;
@@ -99,7 +103,7 @@ public class Provider {
                 applicationDistribution.put(1, collectionSize1);
                 applicationDistribution.put(2, collectionSize2);
                 applicationDistribution.put(3, collectionSize3);
-                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
+                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution, true);
             }
             case 1 -> {
                 numberOfCollections = 2;
@@ -107,7 +111,7 @@ public class Provider {
                 Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 20));
                 applicationDistribution.put(1, collectionSize1);
                 applicationDistribution.put(2, collectionSize2);
-                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
+                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution, true);
             }
             case 2 -> {
                 numberOfCollections = 2;
@@ -115,7 +119,7 @@ public class Provider {
                 Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 20));
                 applicationDistribution.put(1, collectionSize1);
                 applicationDistribution.put(2, collectionSize2);
-                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
+                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution, true);
             }
             case 3 -> {
                 numberOfCollections = 2;
@@ -123,7 +127,7 @@ public class Provider {
                 Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 20));
                 applicationDistribution.put(1, collectionSize1);
                 applicationDistribution.put(2, collectionSize2);
-                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
+                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution, true);
             }
             case 4 -> {
                 numberOfCollections = 2;
@@ -131,15 +135,15 @@ public class Provider {
                 Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 500000));
                 applicationDistribution.put(1, collectionSize1);
                 applicationDistribution.put(2, collectionSize2);
-                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
+                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution, false);
             }
             case 5 -> {
                 numberOfCollections = 2;
-                Map<Integer, Integer> collectionSize1 = new TreeMap<>(Map.of(1, 70000));
-                Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 1000));
+                Map<Integer, Integer> collectionSize1 = new TreeMap<>(Map.of(1, 700000));
+                Map<Integer, Integer> collectionSize2 = new TreeMap<>(Map.of(1, 10000));
                 applicationDistribution.put(1, collectionSize1);
                 applicationDistribution.put(2, collectionSize2);
-                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution);
+                applicationsProvider = new ApplicationsProvider(seed, applicationDistribution, false);
             }
             default -> throw new IllegalStateException("Unexpected value: " + DATASET);
         }

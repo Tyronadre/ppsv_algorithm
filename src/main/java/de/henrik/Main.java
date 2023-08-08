@@ -57,7 +57,7 @@ public class Main {
     private static final String PREF_WIDTH = "width";
     private static final String PREF_HEIGHT = "height";
 
-    public static int initialDataset = 5;
+    public static int initialDataset = -1;
     public static Graph graph = new AdjacencyListGraph("Graph");
     public static Provider provider = new Provider(initialDataset);
 
@@ -71,10 +71,10 @@ public class Main {
     private static final JButton cancelAlgo = new JButton("Force Stop Algorithm");
     private static final JButton showGraph = new JButton("Hide Graph");
     private static final JPanel dataSetSelection = new JPanel();
-    private static final JButton algo1 = createAlgorithmButton("RandomIterationAlgorithm", new RandomIterationAlgorithm(new Random().nextLong()));
-    private static final JButton algo2 = createAlgorithmButton("HightestPriorityAlgorithm", new HighestPriorityAlgorithm(new Random().nextLong()));
+    private static final JButton algo1 = createAlgorithmButton("RandomIterationAlgorithm (Broken)", new RandomIterationAlgorithm(new Random().nextLong()));
+    private static final JButton algo2 = createAlgorithmButton("HightestPriorityAlgorithm (Broken)", new HighestPriorityAlgorithm(new Random().nextLong()));
     private static final JButton algo3 = createAlgorithmButton("GreedyCycleAlgorithm (WIP)", new GreedyCycleAlgorithm(new Random().nextLong()));
-    private static final JButton algo4 = createAlgorithmButton("SingleTest (WIP)", new SingleOnly(new Random().nextLong()));
+    private static final JButton algo4 = createAlgorithmButton("SingleTest", new SingleOnly(new Random().nextLong()));
     private static final JButton algo5 = createAlgorithmButton("GroupTest (WIP)", new TTCGroups(new Random().nextLong()));
     private static final JButton algoPause = new JButton("Pause Algorithm");
     private static final JButton algoStep = new JButton("Step Algorithm");
@@ -318,7 +318,7 @@ public class Main {
         });
 
         dataSetSelection.setLayout(new BoxLayout(dataSetSelection, BoxLayout.X_AXIS));
-        JSpinner dataSet = new JSpinner(new SpinnerNumberModel(initialDataset, -1, 5, 1));
+        JSpinner dataSet = new JSpinner(new SpinnerNumberModel(initialDataset, -2, 5, 1));
         dataSetSelection.add(dataSet);
         JButton loadSet = new JButton("Load Set");
         dataSetSelection.add(loadSet);

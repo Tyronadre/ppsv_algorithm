@@ -12,10 +12,11 @@ import static de.henrik.algorithm.Util.unhighlightElement;
 
 public class SingleOnly extends Algorithm {
 
-    HighestPriorityAlgorithm highestPriorityAlgorithm;
     public SingleOnly(long seed) {
         super(seed);
     }
+
+    public static HashMap<Integer, Integer> depthHits = new HashMap<>();
 
     @Override
     void startAlgorithm() {
@@ -27,7 +28,6 @@ public class SingleOnly extends Algorithm {
 
 
         System.out.println("Starting Single Only Algorithm");
-        List<Topic> topics = provider.courseAndTopicProvider.getTopicList();
         ConcurrentApplicationHashMap applicationHashMap = provider.applicationsProvider.getConcurrentApplicationHashMap();
 
         var groups = provider.studentAndGroupProvider.getGroupsBySize().get(1);
@@ -64,12 +64,11 @@ public class SingleOnly extends Algorithm {
                         if (slow) highlightElement(graph.getEdge(application.name()));
                         checkPause();
 
-                        var currentAppOfOtherGroup = application.topic().acceptedApplications().size() > 0 ? application.topic().acceptedApplications().get(0) : null;
+                        var currentAppOfOtherGroup = !application.topic().acceptedApplications().isEmpty() ? application.topic().acceptedApplications().get(0) : null;
                         if (currentAppOfOtherGroup == null) {
                             //assign since this is empty
                             if (group.getAcceptedApplication(collectionID) != null) {
                                 group.removeCurrentAcceptedApplication(collectionID);
-                                applicationHashMap.removeAllWithSameKey(application);
                             }
                             application.topic().acceptApplication(application);
                             improvementMade = true;
@@ -82,7 +81,7 @@ public class SingleOnly extends Algorithm {
                             // sonst rufen wir rekursiv wieder diese funktion auf, mit der anderen gruppe als aktuelle gruppe.
                             // die rekursion ist außerdem beendet, wenn wir wieder auf eine gruppe stoßen die wir bereits abgehandelt haben.
                             // wenn die aktuelle gruppe keine prio hat geben wir eine sehr große zahl an damit sie wenn möglich eine bekommt.
-                            if (swapGroups(application, application.topic().acceptedApplications().get(0).getGroupAndCollectionKey(), 0, currentPriority == -1 ? 1000 : currentPriority, application, new HashSet<>())) {
+                            if (swapGroups(application, application.topic().acceptedApplications().get(0).getGroupAndCollectionKey(), application.priority(), currentPriority == -1 ? 1000 : currentPriority, application, new HashSet<>(Collections.singleton(application.getGroupAndCollectionKey())),0)) {
                                 improvementMade = true;
                                 if (currentPriority != -1)
                                     group.getApplicationsFromCollection(collectionID).get(currentPriority - 1).removeApplication();
@@ -104,16 +103,8 @@ public class SingleOnly extends Algorithm {
             }
             if (slow) Util.repaintGraph();
         } while (improvementMade);
-    }
 
-    /**
-     * Gets the currently accepted group for a topic
-     *
-     * @param topic the topic to get the group for
-     * @return the group that is currently accepted for the topic
-     */
-    private Group getGroupForTopic(Topic topic) {
-        return topic.acceptedApplications().size() > 0 ? topic.acceptedApplications().get(0).group() : null;
+        depthHits.forEach((integer, integer2) -> System.out.println("Depth: " + integer + " Hits: " + integer2));
     }
 
     /**
@@ -125,8 +116,8 @@ public class SingleOnly extends Algorithm {
      * @param processedGroups a set of processed groups to avoid infinite recursion
      * @return true if a valid swap is found and performed, false otherwise
      */
-    private boolean swapGroups(Application application, Tupel<Group, Integer> currentGroupKey, int currentPriority, int maxPriority, Application initialApplication, Set<Tupel<Group, Integer>> processedGroups) {
-        // TODO: 17.07.2023 i think we can vastly optimize this if we save the groups that cannot improve in this iteration, and dont look at them again. if we make any changes we delete the affected groups from this set.
+    private boolean swapGroups(Application application, Tupel<Group, Integer> currentGroupKey, int currentPriority, int maxPriority, Application initialApplication, Set<Tupel<Group, Integer>> processedGroups, int depth) {
+        // TODO: 17.07.2023 i think we can vastly optimize this if we save the groups that cannot improve in this iteration, and dont look at them again.
 
         if (verbose)
             System.out.println("Swap called with application" + application + " currentGroup: " + currentGroupKey.toString() + " currentPriority: " + currentPriority + " maxPriority: " + maxPriority + " groupsLookedAt" + processedGroups.size());
@@ -138,11 +129,17 @@ public class SingleOnly extends Algorithm {
         if (slow) {
             highlightElement(graph.getNode(currentGroup.toString()));
             if (currentGroupAcceptedApplication != null) {
-                highlightElement(graph.getEdge(currentGroupAcceptedApplication.toString()));
+                highlightElement(graph.getEdge(currentGroupAcceptedApplication.name()));
                 highlightElement(graph.getNode(currentGroupAcceptedApplication.topic().name()));
             }
         }
         checkPause();
+
+
+        var currentGroupPrio = currentGroup.getPriority(collectionID);
+        var p = currentGroupPrio == -1 ? 1000 : currentGroupPrio;
+        maxPriority += p;
+        currentPriority += application.priority();
 
         if (processedGroups.contains(currentGroupKey)) {
             // This group has already been processed, and there was apparently no better distribution, so we break the recursion here.
@@ -151,41 +148,31 @@ public class SingleOnly extends Algorithm {
 
             // if we hit the first group that is on this path of the recursion we can do a circle swap
             if (initialApplication.getGroupAndCollectionKey().equals(currentGroupKey)) {
-                if (verbose) System.out.println("application = " + application + ", currentGroupKey = " + currentGroupKey + ", currentPriority = " + currentPriority + ", maxPriority = " + maxPriority + ", initialApplication = " + initialApplication + ", processedGroups = " + processedGroups);
-//                if (verbose) System.out.println("Found better prio for group: " + currentGroupKey);
-//                //WHAT DO I WANT TO SWAP HERE. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-//                currentGroup.removeCurrentAcceptedApplication(collectionID);
-//                application.acceptApplication();
-//                return true;
-//                var applicationsOfCurrentCroup = currentGroup.getApplicationsFromCollection(collectionID);
-//            applicationsOfCurrentCroup.stream().filter(application1 -> application1.topic())
-//            if (currentGroup.getCurrentAcceptedApplication(collectionID) != null && currentPriority + currentGroup.getApplicationsFromCollection(collectionID) < maxPriority) {
-//                if (verbose)
-//                    System.out.println("Found better prio for group: " + currentGroupKey);
-//                //WHAT DO I WANT TO SWAP HERE. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-//                currentGroup.removeCurrentAcceptedApplication(collectionID);
-//                applicationOfCurrentGroup.acceptApplication();
-//                application.group().removeCurrentAcceptedApplication(application.collectionID());
-//                application.acceptApplication();
-//                return true;
-//            }
+                if (maxPriority > currentPriority) {
+                    System.out.println("Found circle swap");
+                    if (verbose) System.out.println("Found better prio for group: " + currentGroupKey);
+                    currentGroup.removeCurrentAcceptedApplication(collectionID);
+                    application.group().removeCurrentAcceptedApplication(application.collectionID());
+                    application.acceptApplication();
+
+                    saveDepth(depth);
+                    return true;
+                }
+                if (verbose) System.out.println("max depth: \napplication = " + application + ", currentGroupKey = " + currentGroupKey + ", currentPriority = " + currentPriority + ", maxPriority = " + maxPriority + ", initialApplication = " + initialApplication + ", numberOfProcessedGroups = " + processedGroups.size());
             }
 
+            saveDepth(depth);
             return false;
         }
         processedGroups.add(currentGroupKey);
-        var currentGroupPrio = currentGroup.getPriority(collectionID);
-        var p = currentGroupPrio == -1 ? 1000 : currentGroupPrio;
-        maxPriority += p;
-        currentPriority += p;
         // Iterate over all prios of the other group that are still possible
         // we dont look at prios that are to high
         // first we only look for empty spaces
         if (verbose)
             System.out.println("Looking at group: " + currentGroup + " with currentPriority: " + currentPriority + " and maxPriority: " + maxPriority);
-        for (int prioOfCurrentGroup = currentGroupPrio == -1 ? 1 : currentGroupPrio; prioOfCurrentGroup + currentPriority + 1 < maxPriority && prioOfCurrentGroup < currentGroup.getApplicationsFromCollection(collectionID).size(); prioOfCurrentGroup++) {
+        for (int prioOfCurrentGroup = 1; prioOfCurrentGroup + currentPriority < maxPriority && prioOfCurrentGroup < currentGroup.getApplicationsFromCollection(collectionID).size(); prioOfCurrentGroup++) {
             // we dont do -1 here because we dont want to look at the application with prio - 1 (this is the one that lead us here)
-            var applicationOfCurrentGroup = currentGroup.getApplicationsFromCollection(collectionID).get(prioOfCurrentGroup);
+            var applicationOfCurrentGroup = currentGroup.getApplicationsFromCollection(collectionID).get(prioOfCurrentGroup - 1);
             if (verbose)
                 System.out.println("1 Looking at: " + applicationOfCurrentGroup + " of group: " + currentGroup + " with currentPriority: " + currentPriority + " and maxPriority: " + maxPriority);
             if (slow) highlightElement(graph.getEdge(applicationOfCurrentGroup.name()));
@@ -197,14 +184,15 @@ public class SingleOnly extends Algorithm {
                 application.group().removeCurrentAcceptedApplication(application.collectionID());
                 application.acceptApplication();
                 if (verbose) System.out.println("Swapped " + applicationOfCurrentGroup + " with " + application);
+                saveDepth(depth);
                 return true;
             }
             // we couldn't swap so we paint the edge back to normal
             if (slow) unhighlightElement(graph.getEdge(applicationOfCurrentGroup.name()));
         }
         //we didnt have any empty spaces in this groups applications, so now we do recursion from top to bottom priority
-        for (int prioOfCurrentGroup = currentGroupPrio == -1 ? 1 : currentGroupPrio; prioOfCurrentGroup + currentPriority + 1 < maxPriority && prioOfCurrentGroup < currentGroup.getApplicationsFromCollection(collectionID).size(); prioOfCurrentGroup++) {
-            var applicationOfCurrentGroup = currentGroup.getApplicationsFromCollection(collectionID).get(prioOfCurrentGroup);
+        for (int prioOfCurrentGroup = 1; prioOfCurrentGroup + currentPriority < maxPriority && prioOfCurrentGroup < currentGroup.getApplicationsFromCollection(collectionID).size(); prioOfCurrentGroup++) {
+            var applicationOfCurrentGroup = currentGroup.getApplicationsFromCollection(collectionID).get(prioOfCurrentGroup - 1);
             if (verbose)
                 System.out.println("2 Looking at: " + applicationOfCurrentGroup + " of group: " + currentGroup + " with currentPriority: " + currentPriority + " and maxPriority: " + maxPriority);
 
@@ -213,12 +201,13 @@ public class SingleOnly extends Algorithm {
             // do recursion with the next group
             // if this function returns true we know that the swap was successful and we can return true
             // if it returns false we know that the swap was not successful and we continue with the next slot
-            if (swapGroups(applicationOfCurrentGroup, applicationOfCurrentGroup.topic().acceptedApplications().get(0).getGroupAndCollectionKey(), currentPriority, maxPriority, initialApplication, processedGroups)) {
+            if (swapGroups(applicationOfCurrentGroup, applicationOfCurrentGroup.topic().acceptedApplications().get(0).getGroupAndCollectionKey(), currentPriority, maxPriority, initialApplication, processedGroups,depth++)) {
                 application.group().removeCurrentAcceptedApplication(application.collectionID());
                 application.acceptApplication();
                 if (verbose)
                     System.out.println("swap successful, removing old application " + application.group().getCurrentAcceptedApplication(application.collectionID()) + " and accepting new application " + application);
                 checkPause();
+
                 return true;
             }
             //we couldnt swap so we paint the edge back to normal
@@ -231,10 +220,13 @@ public class SingleOnly extends Algorithm {
                 unhighlightElement(graph.getEdge(currentGroupAcceptedApplication.toString()));
             }
         }
+        saveDepth(depth);
         return false;
     }
+
+    private void saveDepth(int depth) {
+        depthHits.putIfAbsent(depth, 1);
+        depthHits.computeIfPresent(depth, (k, v) -> v + 1);
+    }
+
 }
-
-
-
-// TODO: 15.07.2023 COLLECTIONS

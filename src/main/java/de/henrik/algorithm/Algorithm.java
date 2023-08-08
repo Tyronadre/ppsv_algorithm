@@ -77,8 +77,6 @@ public abstract class Algorithm implements Runnable {
     public void run() {
         if (algorithm == null) {
             Algorithm.algorithm = this;
-            System.out.println("Clearing old Assignments");
-            Util.clear();
             System.out.println("Starting Algorithm with seed " + seed + " slow " + slow + " verbose " + verbose);
             var time = System.currentTimeMillis();
             startAlgorithm();

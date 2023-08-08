@@ -1,5 +1,6 @@
 package de.henrik.generator;
 
+import de.henrik.data.Application;
 import de.henrik.data.Group;
 import de.henrik.data.Student;
 
@@ -7,7 +8,7 @@ import java.util.*;
 
 public class StudentAndGroupProvider {
     public final long seed;
-    private final int studentCount;
+    protected final int studentCount;
     private final Map<Integer, Integer> groupSizeToNumberOfStudents;
 
     protected List<Student> studentList;
@@ -53,24 +54,34 @@ public class StudentAndGroupProvider {
         for (int groupSize : groupSizeToNumberOfStudents.keySet()) {
             int generatedGroups = 0;
             groupsBySize.put(groupSize, new ArrayList<>());
-            while (generatedGroups < groupSizeToNumberOfStudents.get(groupSize)) {
-                List<Student> tempGroupList = new ArrayList<>();
-                List<Integer> selectedIndices = new ArrayList<>(); // Keep track of selected indices
-                for (int j = 0; j < groupSize; j++) {
-                    int nextStudentIndex;
-                    do {
-                        nextStudentIndex = random.nextInt(studentList.size());
-                    } while (selectedIndices.contains(nextStudentIndex)); // Ensure uniqueness
-                    selectedIndices.add(nextStudentIndex);
-                    Student student = studentList.get(nextStudentIndex);
-                    tempGroupList.add(student);
+            int groupsToGenerate = groupSizeToNumberOfStudents.get(groupSize);
+            while (generatedGroups < groupsToGenerate) {
+                System.out.print("Generating Group: " + generatedGroups + "/" + groupsToGenerate + " of size " + groupSize + "\r");
+                List<Student> tempGroupList;
+                if (groupSize > 1) {
+                    tempGroupList = new ArrayList<>();
+                    List<Integer> selectedIndices = new ArrayList<>();
+                    for (int j = 0; j < groupSize; j++) {
+                        int nextStudentIndex;
+                        do {
+                            nextStudentIndex = random.nextInt(studentList.size());
+                        } while (selectedIndices.contains(nextStudentIndex));
+                        selectedIndices.add(nextStudentIndex);
+                        Student student = studentList.get(nextStudentIndex);
+                        tempGroupList.add(student);
+                    }
+
+                } else {
+                    tempGroupList = Collections.singletonList(studentList.get(random.nextInt(studentList.size())));
                 }
+
                 if (groupsBySize.get(groupSize).stream().anyMatch(group -> new HashSet<>(group.students()).containsAll(tempGroupList))) {
                     continue;
                 }
-                groupsBySize.get(groupSize).add(new Group(tempGroupList, new ArrayList<>()));
+                groupsBySize.get(groupSize).add(new Group(tempGroupList));
                 generatedGroups++;
             }
         }
+        System.out.println("Done!");
     }
 }
