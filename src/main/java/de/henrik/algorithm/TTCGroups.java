@@ -218,25 +218,26 @@ public class TTCGroups extends Algorithm {
             if (verbose) System.out.println("Already processed group: " + currentGroupKey);
 
             // if we hit the first group that is on this path of the recursion we can do a circle swap
-            if (initialApplication.getGroupAndCollectionKey().equals(currentGroupKey)) {
-                if (maxPriority > currentPriority) {
-                    System.out.println("Found circle swap");
-                    if (verbose) System.out.println("Found better prio for group: " + currentGroupKey);
-                    currentGroup.removeCurrentAcceptedApplication(collectionID);
-                    application.group().removeCurrentAcceptedApplication(application.collectionID());
-                    application.acceptApplication();
-
-                    saveDepth(depth);
-                    return true;
-                }
-                if (verbose)
-                    System.out.println("max depth: \napplication = " + application + ", currentGroupKey = " + currentGroupKey + ", currentPriority = " + currentPriority + ", maxPriority = " + maxPriority + ", initialApplication = " + initialApplication + ", numberOfProcessedGroups = " + processedGroups.size());
-            }
+//            if (initialApplication.getGroupAndCollectionKey().equals(currentGroupKey)) {
+//                if (maxPriority > currentPriority) {
+//                    System.out.println("Found circle swap");
+//                    if (verbose) System.out.println("Found better prio for group: " + currentGroupKey);
+//                    currentGroup.removeCurrentAcceptedApplication(collectionID);
+//                    application.group().removeCurrentAcceptedApplication(application.collectionID());
+//                    application.acceptApplication();
+//
+//                    saveDepth(depth);
+//                    return true;
+//                }
+//                if (verbose)
+//                    System.out.println("max depth: \napplication = " + application + ", currentGroupKey = " + currentGroupKey + ", currentPriority = " + currentPriority + ", maxPriority = " + maxPriority + ", initialApplication = " + initialApplication + ", numberOfProcessedGroups = " + processedGroups.size());
+//            }
 
             saveDepth(depth);
             return false;
         }
         processedGroups.add(currentGroupKey);
+
         // Iterate over all prios of the other group that are still possible
         // we dont look at prios that are to high
         // first we only look for empty spaces
