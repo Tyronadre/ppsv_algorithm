@@ -1,6 +1,7 @@
 package de.henrik.data;
 
 import java.util.Objects;
+import java.util.Queue;
 
 public final class Application {
     private static int idCounter = 0;
@@ -17,6 +18,7 @@ public final class Application {
         this.collectionID = collectionID;
         this.priority = priority;
         this.groupAndCollectionKey = new Tupel<>(group, collectionID);
+        new Queue<>()
     }
 
 
