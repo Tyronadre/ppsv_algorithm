@@ -9,11 +9,11 @@ import static de.henrik.Main.provider;
 import static de.henrik.algorithm.Util.*;
 
 
-public class TTCGroups extends Algorithm {
+public class TTCGroupsNew extends Algorithm {
 
     private ConcurrentApplicationHashMap applicationHashMap;
 
-    public TTCGroups(long seed) {
+    public TTCGroupsNew(long seed) {
         super(seed);
     }
 
@@ -54,8 +54,7 @@ public class TTCGroups extends Algorithm {
                     if (verbose)
                         System.out.println("\nTrying to find a better application for" + group + " with current " + group.getAcceptedApplication(collectionID));
 
-                    // go through all applications of this group
-                    applicationsLoop:
+                    // go through all applications of the collection of this group and find one made out of non accepted applications
                     for (Application application : group.getApplicationsFromCollection(collectionID)) {
                         // if we didn't find any better assignment we stop
                         if (application.priority() == currentPriority) {
@@ -78,27 +77,8 @@ public class TTCGroups extends Algorithm {
                             break;
                         }
 
+                        if (slow) unhighlightElement(graph.getEdge(application.name()));
 
-                        Topic topic = application.topic();
-
-                        // Now we have to do stuff with swapping.
-                        // We filter all current applications of this topic for with which one we can swap to still get a valid assignment.
-                        // Then we iterate over these by size to gives us the best possible fill (size wise) of the slot.
-                        var otherApplications = topic.acceptedApplications().stream().filter(application1 -> {
-                            var slot = topic.getSlotOfApplication(application1);
-                            return slot.participants() - application1.size() + application.size() >= topic.slotSize().first() && slot.participants() - application1.size() + application.size() <= topic.slotSize().second();
-                        }).sorted(Comparator.comparingInt(Application::size)).toList();
-                        for (var otherApplication : otherApplications)
-                            if (swapGroups(application, otherApplication.getGroupAndCollectionKey(), 0, currentPriority == -1 ? 1000 : currentPriority, application, new HashSet<>(),0)) {
-                                improvementMade = true;
-                                if (currentPriority != -1)
-                                    group.getApplicationsFromCollection(collectionID).get(currentPriority - 1).removeApplication();
-                                else {
-                                    applicationHashMap.removeAllWithSameKey(application);
-                                    applicationHashMap.removeAllWithSameKey(otherApplication);
-                                }
-                                break applicationsLoop;
-                            }
                     }
                     if (slow) Util.repaintGraph();
                     checkPause();

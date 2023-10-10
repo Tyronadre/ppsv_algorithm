@@ -61,6 +61,4 @@ public class test {
             default -> throw new IllegalArgumentException("Something went wrong");
         }
     };
-
-    Queue
 }

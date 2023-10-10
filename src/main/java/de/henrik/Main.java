@@ -76,6 +76,7 @@ public class Main {
     private static final JButton algo3 = createAlgorithmButton("GreedyCycleAlgorithm (WIP)", new GreedyCycleAlgorithm(new Random().nextLong()));
     private static final JButton algo4 = createAlgorithmButton("SingleTest", new SingleOnly(new Random().nextLong()));
     private static final JButton algo5 = createAlgorithmButton("GroupTest (WIP)", new TTCGroups(new Random().nextLong()));
+    private static final JButton algo6 = createAlgorithmButton("GroupTest2 (WIP)", new TTCGroupsNew(new Random().nextLong()));
     private static final JButton algoPause = new JButton("Pause Algorithm");
     private static final JButton algoStep = new JButton("Step Algorithm");
     private static final JPanel algoSpeedPanel = new JPanel();
@@ -252,8 +253,10 @@ public class Main {
         buttonPanel.add(algo4, c);
         c.gridy++;
         buttonPanel.add(algo5, c);
+        c.gridy++;
+        buttonPanel.add(algo6,c);
 
-        c.gridy += 2;
+        c.gridy += 1;
         buttonPanel.add(algoPause, c);
         c.gridy++;
         buttonPanel.add(algoStep, c);

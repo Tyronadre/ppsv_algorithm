@@ -18,7 +18,6 @@ public final class Application {
         this.collectionID = collectionID;
         this.priority = priority;
         this.groupAndCollectionKey = new Tupel<>(group, collectionID);
-        new Queue<>()
     }
 
 

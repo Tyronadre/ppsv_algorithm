@@ -96,9 +96,9 @@ public class ConcurrentApplicationHashMap {
      * @param application the application to remove
      */
     public void removeAllWithSameKey(Application application) {
-        bySize.get(application.size()).removeIf(application::equals);
-        byTopic.get(application.topic()).removeIf(application::equals);
-        byKey.get(application.getGroupAndCollectionKey()).removeIf(application::equals);
+        bySize.get(application.size()).removeIf(application2 -> application2.getGroupAndCollectionKey().equals(application.getGroupAndCollectionKey()));
+        byTopic.forEach((topic, list) -> list.removeIf(application2 -> application2.getGroupAndCollectionKey().equals(application.getGroupAndCollectionKey())));
+        byKey.remove(application.getGroupAndCollectionKey());
     }
 
     public void add(Application application) {
