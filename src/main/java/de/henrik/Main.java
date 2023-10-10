@@ -228,6 +228,7 @@ public class Main {
                 Algorithm.setSlow(true);
             }
         });
+        JButton a = new JButton("a");
 
         verbose.addActionListener(e -> {
             if (verbose.getText().equals("Verbose")) {
@@ -318,7 +319,7 @@ public class Main {
         });
 
         dataSetSelection.setLayout(new BoxLayout(dataSetSelection, BoxLayout.X_AXIS));
-        JSpinner dataSet = new JSpinner(new SpinnerNumberModel(initialDataset, -2, 5, 1));
+        JSpinner dataSet = new JSpinner(new SpinnerNumberModel(initialDataset, -3, 5, 1));
         dataSetSelection.add(dataSet);
         JButton loadSet = new JButton("Load Set");
         dataSetSelection.add(loadSet);

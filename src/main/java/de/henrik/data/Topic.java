@@ -23,7 +23,7 @@ public class Topic {
     }
 
     public String name() {
-        return name;
+        return course.name() + name;
     }
 
     public Course course() {

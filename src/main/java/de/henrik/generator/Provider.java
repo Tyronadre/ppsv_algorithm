@@ -25,6 +25,7 @@ public class Provider {
     public void fillGraph() {
         System.out.println("\n<--- COURSE AND TOPICS --->\n");
         courseAndTopicProvider = switch (DATASET) {
+            case -3 -> new CustomCourseAndTopicProvider3();
             case -2 -> new CustomCourseAndTopicProvider2();
             case -1 -> new CustomCourseAndTopicProvider();
             case 0 ->
@@ -57,6 +58,7 @@ public class Provider {
 
         System.out.println("\n<--- STUDENT AND GROUPS --->\n");
         studentAndGroupProvider = switch (DATASET) {
+            case -3 -> new CustomStudentAndGroupProvider3();
             case -2 -> new CustomStudentAndGroupProvider2();
             case -1 -> new CustomStudentAndGroupProvider();
             case 0 -> new StudentAndGroupProvider(seed, 1000, new TreeMap<>(Map.of(1, 900, 2, 5, 3, 5, 4, 10, 5, 20)));
@@ -87,6 +89,10 @@ public class Provider {
         Map<Integer, Map<Integer, Integer>> applicationDistribution = new TreeMap<>();
         int numberOfCollections;
         switch (DATASET) {
+            case -3 -> {
+                numberOfCollections = 1;
+                applicationsProvider = new CustomApplicationProvider3();
+            }
             case -2 -> {
                 numberOfCollections = 1;
                 applicationsProvider = new CustomApplicationProvider2();

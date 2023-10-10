@@ -3,6 +3,7 @@ package de.henrik.algorithm;
 import de.henrik.Main;
 import de.henrik.data.Application;
 import de.henrik.data.IntegerTupel;
+import de.henrik.data.Tupel;
 import org.graphstream.graph.Element;
 import org.graphstream.graph.Graph;
 
@@ -112,6 +113,14 @@ public class Util {
             return new ArrayList<>();
         }
 
+        return Objects.requireNonNull(multiObjectiveKnapsackWithResult(applications, maxSize)).first();
+    }
+
+    public static Tupel<List<Application>, KnapsackResult> multiObjectiveKnapsackWithResult(List<Application> applications, int maxSize) {
+        if (applications.isEmpty() || maxSize <= 0) {
+            return null;
+        }
+
         applications.sort(Comparator.comparingInt(Application::size));
 
         KnapsackResult[][] dp = new KnapsackResult[applications.size() + 1][maxSize + 1];
@@ -148,10 +157,10 @@ public class Util {
             i--;
         }
 
-        return selectedApplications;
+        return new Tupel<>(selectedApplications, dp[applications.size()][maxSize]);
     }
 
-    private record KnapsackResult(int size, int priority) implements Comparable<KnapsackResult> {
+    record KnapsackResult(int size, int priority) implements Comparable<KnapsackResult> {
         @Override
         public int compareTo(KnapsackResult other) {
             if (this.size != other.size) {

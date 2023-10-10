@@ -86,7 +86,7 @@ public class SingleOnly extends Algorithm {
                                 if (currentPriority != -1)
                                     group.getApplicationsFromCollection(collectionID).get(currentPriority - 1).removeApplication();
                                 else {
-                                    applicationHashMap.removeAllWithSameKey(application);
+                                   // applicationHashMap.removeAllWithSameKey(application);
                                 }
                                 if (verbose) System.out.println("Found better distribution for " + application);
                                 break;

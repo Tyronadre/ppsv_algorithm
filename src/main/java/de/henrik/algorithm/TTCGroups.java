@@ -11,13 +11,12 @@ import static de.henrik.algorithm.Util.*;
 
 public class TTCGroups extends Algorithm {
 
+    public static HashMap<Integer, Integer> depthHits = new HashMap<>();
     private ConcurrentApplicationHashMap applicationHashMap;
 
     public TTCGroups(long seed) {
         super(seed);
     }
-
-    public static HashMap<Integer, Integer> depthHits = new HashMap<>();
 
     @Override
     @SuppressWarnings("Duplicates")
@@ -30,7 +29,7 @@ public class TTCGroups extends Algorithm {
         System.out.println("Starting TTC Only Algorithm");
         ConcurrentApplicationHashMap applicationHashMap = provider.applicationsProvider.getConcurrentApplicationHashMap();
 
-        var groups = provider.studentAndGroupProvider.getGroupsBySize().get(1);
+        var groups = provider.studentAndGroupProvider.getAllGroups();
         boolean improvementMade;
         int iteration = 0;
         double allKeys = groups.stream().mapToInt(Group::getCollectionSize).sum();
@@ -89,7 +88,7 @@ public class TTCGroups extends Algorithm {
                             return slot.participants() - application1.size() + application.size() >= topic.slotSize().first() && slot.participants() - application1.size() + application.size() <= topic.slotSize().second();
                         }).sorted(Comparator.comparingInt(Application::size)).toList();
                         for (var otherApplication : otherApplications)
-                            if (swapGroups(application, otherApplication.getGroupAndCollectionKey(), 0, currentPriority == -1 ? 1000 : currentPriority, application, new HashSet<>(),0)) {
+                            if (swapGroups(application, otherApplication.getGroupAndCollectionKey(), 0, currentPriority == -1 ? 1000 : currentPriority, application, new HashSet<>(), 0)) {
                                 improvementMade = true;
                                 if (currentPriority != -1)
                                     group.getApplicationsFromCollection(collectionID).get(currentPriority - 1).removeApplication();
@@ -261,6 +260,94 @@ public class TTCGroups extends Algorithm {
             //we couldnt swap so we paint the edge back to normal
             if (slow) unhighlightElement(graph.getEdge(applicationOfCurrentGroup.name()));
         }
+        //we didnt find an assignment with only new ones. so now we will look for an assignment where we take the already assigned applications into account
+        /*
+        for (Application applicationOfCurrentGroup : currentGroup.getApplicationsFromCollection(collectionID)) {
+            if (slow) highlightElement(graph.getEdge(applicationOfCurrentGroup.name()));
+            if (verbose)
+                System.out.println("2 Looking at: " + applicationOfCurrentGroup + " of group: " + currentGroup + " with currentPriority: " + currentPriority + " and maxPriority: " + maxPriority);
+            checkPause();
+
+            //Get all the applications for this topic (also the assigned ones)
+            var topic = application.topic();
+            var possibleApplications = applicationHashMap.getByTopic(topic);
+            possibleApplications.addAll(application.topic().acceptedApplications());
+
+            //Since we want to assign the application, we need to remove it from the possible ones, because knapsack does not know which ones we want to have in the solution in any case
+            //by doing this we forcing it manually into the assigned applications.
+            possibleApplications.remove(application);
+            if (slow)
+                possibleApplications.forEach(application1 -> highlightElement(graph.getEdge(application1.name())));
+            checkPause();
+
+            //check for each slot if we swap applications it in such a way that we can fit the application.
+            for (var slotID : topic.possibleSlots(application)) {
+                var slot = topic.slots().get(slotID);
+                // find all applications in this slot that we could swap with.
+                var possibleSwapApplications = slot.acceptedApplications().stream().filter(application1 -> slot.participants() - application1.size() + application.size() >= slot.slotSize().first() && slot.participants() - application1.size() + application.size() <= slot.slotSize().second() ).toList();
+                for (var possibleSwapApplication : possibleSwapApplications) {
+                    var possibleSwapGroup = possibleSwapApplication.group();
+                    var possibleSwapCollectionID = possibleSwapApplication.collectionID();
+
+                    for (int prioOfSwapGroup = 1; prioOfSwapGroup + currentPriority < maxPriority && prioOfSwapGroup < possibleSwapGroup.getApplicationsFromCollection(possibleSwapCollectionID).size(); prioOfSwapGroup++) {
+                        var applicationOfSwapGroup = possibleSwapGroup.getApplicationsFromCollection(collectionID).get(prioOfSwapGroup - 1);
+                        if (verbose)
+                            System.out.println("2 Looking at: " + applicationOfSwapGroup + " of group: " +possibleSwapGroup + " with currentPriority: " + currentPriority + " and maxPriority: " + maxPriority);
+
+                        if (slow) highlightElement(graph.getEdge(applicationOfSwapGroup.name()));
+                        checkPause();
+                        // do recursion with the next group
+                        // if this function returns true we know that the swap was successful and we can return true
+                        // if it returns false we know that the swap was not successful and we continue with the next slot
+                        if (swapGroups(applicationOfSwapGroup, applicationOfSwapGroup.topic().acceptedApplications().get(0).getGroupAndCollectionKey(), currentPriority, maxPriority, initialApplication, processedGroups,depth++)) {
+                            application.group().removeCurrentAcceptedApplication(application.collectionID());
+                            application.acceptApplication();
+                            if (verbose)
+                                System.out.println("swap successful, removing old application " + application.group().getCurrentAcceptedApplication(application.collectionID()) + " and accepting new application " + application);
+                            checkPause();
+
+                            return true;
+                        }
+                        //we couldnt swap so we paint the edge back to normal
+                        if (slow) unhighlightElement(graph.getEdge(applicationOfSwapGroup.name()));
+                        checkPause();
+                    }
+                }
+                //doof mit knapsack. besser ist wenn wir einfach was swapen? ist das dann aber noch mathematisch korrekt?
+
+                var currentParticipants = topic.slots().get(slotID).participants();
+                var knapsackResultTupel = multiObjectiveKnapsackWithResult(possibleApplications, topic.slotSize().second() - currentParticipants - application.size());
+                if (knapsackResultTupel == null) {
+                    continue;
+                }
+                var resultSize = knapsackResultTupel.second().size();
+                var resultPrio = knapsackResultTupel.second().priority();
+                //we need to figure out the new prio. but because we reassign
+                if (resultPrio + app)
+
+                if (!possibleApplicationsForSlot.isEmpty() && ) {
+                    if (slow)
+                        possibleApplicationsForSlot.forEach(application1 -> highlightElement2(graph.getEdge(application1.name())));
+                    checkPause();
+
+                    application.topic().acceptApplication(application, slotID);
+                    applicationHashMap.removeAllWithSameKey(application);
+                    for (var app : possibleApplicationsForSlot) {
+                        applicationHashMap.removeAllWithSameKey(app);
+                        application.topic().acceptApplication(app, slotID);
+                    }
+                    return true;
+                }
+            }
+
+            if (slow) unhighlightElement(graph.getNode(topic.name()));
+            if (slow)
+                possibleApplications.forEach(application1 -> unhighlightElement(graph.getEdge(application1.name())));
+            return false;
+
+
+        }
+        */
         //we didnt have any empty spaces in this groups applications, so now we do recursion from top to bottom priority
 //        for (int prioOfCurrentGroup = currentGroupPrio == -1 ? 1 : currentGroupPrio; prioOfCurrentGroup + currentPriority + 1 < maxPriority && prioOfCurrentGroup < currentGroup.getApplicationsFromCollection(collectionID).size(); prioOfCurrentGroup++) {
 //            var applicationOfCurrentGroup = currentGroup.getApplicationsFromCollection(collectionID).get(prioOfCurrentGroup);

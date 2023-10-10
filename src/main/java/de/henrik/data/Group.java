@@ -5,7 +5,7 @@ import java.util.TreeSet;
 
 public final class Group {
     private static int idCounter = 0;
-    private final int ID;
+    public final int ID;
     private final List<Student> students;
     private final TreeSet<Application> applications;
 
